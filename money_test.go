@@ -2,6 +2,160 @@ package main
 
 import "testing"
 
+func TestParseMoney(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		currency Currency
+		want     Money
+		wantErr  bool
+	}{
+		{
+			name:     "valid EUR",
+			input:    "12.34",
+			currency: EUR,
+			want: Money{
+				Amount:   1234,
+				Currency: EUR,
+			},
+		},
+		{
+			name:     "valid negative EUR",
+			input:    "-4.50",
+			currency: EUR,
+			want: Money{
+				Amount:   -450,
+				Currency: EUR,
+			},
+		},
+		{
+			name:     "valid USD",
+			input:    "12.34",
+			currency: USD,
+			want: Money{
+				Amount:   1234,
+				Currency: USD,
+			},
+		},
+		{
+			name:     "USD pads one fractional digit",
+			input:    "12.3",
+			currency: USD,
+			want: Money{
+				Amount:   1230,
+				Currency: USD,
+			},
+		},
+		{
+			name:     "valid negative USD",
+			input:    "-19.99",
+			currency: USD,
+			want: Money{
+				Amount:   -1999,
+				Currency: USD,
+			},
+		},
+		{
+			name:     "zero USD",
+			input:    "0.00",
+			currency: USD,
+			want: Money{
+				Amount:   0,
+				Currency: USD,
+			},
+		},
+		{
+			name:     "EUR rejects more than two fractional digits",
+			input:    "12.345",
+			currency: EUR,
+			wantErr:  true,
+		},
+		{
+			name:     "USD rejects more than two fractional digits",
+			input:    "12.345",
+			currency: USD,
+			wantErr:  true,
+		},
+		{
+			name:     "USD amount rejects currency symbol",
+			input:    "$12.34",
+			currency: USD,
+			wantErr:  true,
+		},
+		{
+			name:     "unsupported currency",
+			input:    "12.34",
+			currency: Currency("GBP"),
+			wantErr:  true,
+		},
+		{
+			name:     "lowercase EUR is not canonical",
+			input:    "12.34",
+			currency: Currency("eur"),
+			wantErr:  true,
+		},
+		{
+			name:     "lowercase USD is not canonical",
+			input:    "12.34",
+			currency: Currency("usd"),
+			wantErr:  true,
+		},
+		{
+			name:     "empty currency",
+			input:    "12.34",
+			currency: "",
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseMoney(tt.input, tt.currency)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf(
+						"parseMoney(%q, %q) error = nil, want non-nil error; result = %+v",
+						tt.input,
+						tt.currency,
+						got,
+					)
+				}
+
+				if got != (Money{}) {
+					t.Errorf(
+						"parseMoney(%q, %q) returned %+v with an error, want zero Money",
+						tt.input,
+						tt.currency,
+						got,
+					)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf(
+					"parseMoney(%q, %q) returned unexpected error: %v",
+					tt.input,
+					tt.currency,
+					err,
+				)
+			}
+
+			if got != tt.want {
+				t.Errorf(
+					"parseMoney(%q, %q) = %+v, want %+v",
+					tt.input,
+					tt.currency,
+					got,
+					tt.want,
+				)
+			}
+		})
+	}
+}
+
 func TestParseAmountMinor(t *testing.T) {
 	tests := []struct {
 		name             string

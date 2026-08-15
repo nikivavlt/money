@@ -9,9 +9,40 @@ import (
 type AmountMinor int64
 type Currency string
 
+const (
+	EUR Currency = "EUR"
+	USD Currency = "USD"
+)
+
 type Money struct {
 	Amount   AmountMinor
 	Currency Currency
+}
+
+func parseMoney(input string, currency Currency) (Money, error) {
+	minorDigits, err := minorDigitsForCurrency(currency)
+	if err != nil {
+		return Money{}, fmt.Errorf("parse money: %w", err)
+	}
+
+	amountMinor, err := parseAmountMinor(input, minorDigits)
+	if err != nil {
+		return Money{}, fmt.Errorf("parse money: %w", err)
+	}
+
+	return Money{
+		Amount:   amountMinor,
+		Currency: currency,
+	}, nil
+}
+
+func minorDigitsForCurrency(currency Currency) (int, error) {
+	switch currency {
+	case EUR, USD:
+		return 2, nil
+	default:
+		return 0, fmt.Errorf("unsupported currency %q", currency)
+	}
 }
 
 func parseAmountMinor(input string, fractionalDigits int) (AmountMinor, error) {
