@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,6 +14,19 @@ const (
 	EUR Currency = "EUR"
 	USD Currency = "USD"
 )
+
+var ErrUnsupportedCurrency = errors.New("unsupported currency")
+type UnsupportedCurrencyError struct {
+	Currency Currency
+}
+
+func (e *UnsupportedCurrencyError) Error() string {
+	return fmt.Sprintf("unsupported currency %q", e.Currency)
+}
+
+func (e *UnsupportedCurrencyError) Unwrap() error {
+	return ErrUnsupportedCurrency
+}
 
 type Money struct {
 	Amount   AmountMinor
@@ -41,7 +55,7 @@ func minorDigitsForCurrency(currency Currency) (int, error) {
 	case EUR, USD:
 		return 2, nil
 	default:
-		return 0, fmt.Errorf("unsupported currency %q", currency)
+		return 0, &UnsupportedCurrencyError{ Currency: currency }
 	}
 }
 

@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"errors"
+	"strconv"
+	"testing"
+)
 
 func TestParseMoney(t *testing.T) {
 	tests := []struct {
@@ -388,5 +392,60 @@ func TestParseAmountMinor(t *testing.T) {
 				)
 			}
 		})
+	}
+}
+
+func TestParseMoneyUnsupportedCurrency(t *testing.T) {
+	const unsupported Currency = "GBP"
+
+	_, err := parseMoney("12.34", unsupported)
+	if err == nil {
+		t.Fatal("parseMoney() returned nil error, want an error")
+	}
+
+	if !errors.Is(err, ErrUnsupportedCurrency) {
+		t.Errorf(
+			"parseMoney() error = %v, want it to match ErrUnsupportedCurrency",
+			err,
+		)
+	}
+
+	var currencyErr *UnsupportedCurrencyError
+	if !errors.As(err, &currencyErr) {
+		t.Fatalf(
+			"parseMoney() error type = %T, want *UnsupportedCurrencyError",
+			err,
+		)
+	}
+
+	if currencyErr.Currency != unsupported {
+		t.Errorf(
+			"UnsupportedCurrencyError.Currency = %q, want %q",
+			currencyErr.Currency,
+			unsupported,
+		)
+	}
+
+	wantMessage := `parse money: unsupported currency "GBP"`
+	if err.Error() != wantMessage {
+		t.Errorf(
+			"parseMoney() error = %q, want %q",
+			err,
+			wantMessage,
+		)
+	}
+}
+
+func TestParseMoneyRejectsOverflow(t *testing.T) {
+	_, err := parseMoney("92233720368547758.08", EUR)
+	if err == nil {
+		t.Fatal("parseMoney() returned nil error for an overflowing amount")
+	}
+
+	if !errors.Is(err, strconv.ErrRange) {
+		t.Errorf(
+			"parseMoney() error = %v, want it to match strconv.ErrRange",
+			err,
+		)
 	}
 }
