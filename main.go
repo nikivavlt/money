@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -9,7 +10,7 @@ const version = "dev"
 
 func main() {
 	if len(os.Args) < 2 {
-		printHelp()
+		printHelp(os.Stdout)
 		return
 	}
 
@@ -23,22 +24,22 @@ func main() {
 			os.Exit(2)
 		}
 
-		printHelp()
+		printHelp(os.Stdout)
 	case "version":
 		if len(rest) != 0 {
 			fmt.Fprintf(os.Stderr, "money: version: unexpected argument %q\n", rest[0])
 			os.Exit(2)
 		}
 
-		printVersion()
+		printVersion(os.Stdout)
 	default:
 		fmt.Fprintf(os.Stderr, "money: unknown command %q\n", command)
 		os.Exit(2)
 	}
 }
 
-func printHelp() {
-	fmt.Println(`money - automatic expense analyzer
+func printHelp(w io.Writer) {
+	fmt.Fprintln(w, `money - automatic expense analyzer
 
 Usage:
   money <command>
@@ -48,6 +49,6 @@ Commands:
   version   Show version`)
 }
 
-func printVersion() {
-	fmt.Println("money", version)
+func printVersion(w io.Writer) {
+	fmt.Fprintln(w, "money", version)
 }

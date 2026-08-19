@@ -16,6 +16,7 @@ const (
 )
 
 var ErrUnsupportedCurrency = errors.New("unsupported currency")
+
 type UnsupportedCurrencyError struct {
 	Currency Currency
 }
@@ -55,7 +56,7 @@ func minorDigitsForCurrency(currency Currency) (int, error) {
 	case EUR, USD:
 		return 2, nil
 	default:
-		return 0, &UnsupportedCurrencyError{ Currency: currency }
+		return 0, &UnsupportedCurrencyError{Currency: currency}
 	}
 }
 
