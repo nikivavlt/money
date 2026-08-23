@@ -19,7 +19,6 @@ func TestNewAppCopiesInitialTransactions(t *testing.T) {
 	want := slices.Clone(input)
 	app := newApp(input)
 
-	// Change the caller's slice after constructing the application.
 	input[0].Description = "Changed outside application"
 	input[0].Amount.Amount = -9_999
 
@@ -75,8 +74,6 @@ func TestApplicationAddTransactionCopiesValue(t *testing.T) {
 
 	app.addTransaction(transaction)
 
-	// addTransaction receives Transaction by value, so changing this
-	// variable must not change the transaction stored by the application.
 	transaction.Description = "Changed original"
 	transaction.Amount.Amount = -9_999
 

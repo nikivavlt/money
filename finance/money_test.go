@@ -1,4 +1,4 @@
-package main
+package finance
 
 import (
 	"errors"
@@ -114,7 +114,7 @@ func TestParseMoney(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseMoney(tt.input, tt.currency)
+			got, err := ParseMoney(tt.input, tt.currency)
 
 			if tt.wantErr {
 				if err == nil {
@@ -398,7 +398,7 @@ func TestParseAmountMinor(t *testing.T) {
 func TestParseMoneyUnsupportedCurrency(t *testing.T) {
 	const unsupported Currency = "GBP"
 
-	_, err := parseMoney("12.34", unsupported)
+	_, err := ParseMoney("12.34", unsupported)
 	if err == nil {
 		t.Fatal("parseMoney() returned nil error, want an error")
 	}
@@ -437,7 +437,7 @@ func TestParseMoneyUnsupportedCurrency(t *testing.T) {
 }
 
 func TestParseMoneyRejectsOverflow(t *testing.T) {
-	_, err := parseMoney("92233720368547758.08", EUR)
+	_, err := ParseMoney("92233720368547758.08", EUR)
 	if err == nil {
 		t.Fatal("parseMoney() returned nil error for an overflowing amount")
 	}
