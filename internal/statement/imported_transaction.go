@@ -1,4 +1,4 @@
-package main
+package statement
 
 type statementSource string
 

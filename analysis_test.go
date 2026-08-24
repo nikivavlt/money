@@ -7,7 +7,7 @@ import (
 )
 
 func TestFilterOutflows(t *testing.T) {
-	input := []Transaction{
+	input := []finance.Transaction{
 		{
 			Description: "Salary",
 			Amount: finance.Money{
@@ -40,7 +40,7 @@ func TestFilterOutflows(t *testing.T) {
 
 	originalInput := slices.Clone(input)
 
-	want := []Transaction{
+	want := []finance.Transaction{
 		input[1],
 		input[3],
 	}
@@ -75,7 +75,7 @@ func TestFilterOutflows(t *testing.T) {
 }
 
 func TestFilterOutflowsBoundaryCases(t *testing.T) {
-	euroOutflow := Transaction{
+	euroOutflow := finance.Transaction{
 		Description: "EUR outflow",
 		Amount: finance.Money{
 			Amount:   -100,
@@ -83,7 +83,7 @@ func TestFilterOutflowsBoundaryCases(t *testing.T) {
 		},
 	}
 
-	usdOutflow := Transaction{
+	usdOutflow := finance.Transaction{
 		Description: "USD outflow",
 		Amount: finance.Money{
 			Amount:   -200,
@@ -93,8 +93,8 @@ func TestFilterOutflowsBoundaryCases(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		input []Transaction
-		want  []Transaction
+		input []finance.Transaction
+		want  []finance.Transaction
 	}{
 		{
 			name:  "nil input",
@@ -103,12 +103,12 @@ func TestFilterOutflowsBoundaryCases(t *testing.T) {
 		},
 		{
 			name:  "empty input",
-			input: []Transaction{},
-			want:  []Transaction{},
+			input: []finance.Transaction{},
+			want:  []finance.Transaction{},
 		},
 		{
 			name: "no matching outflows",
-			input: []Transaction{
+			input: []finance.Transaction{
 				{
 					Description: "Income",
 					Amount: finance.Money{
@@ -127,12 +127,12 @@ func TestFilterOutflowsBoundaryCases(t *testing.T) {
 			want: nil,
 		},
 		{
-			name: "all transactions are outflows",
-			input: []Transaction{
+			name: "all finance.transactions are outflows",
+			input: []finance.Transaction{
 				euroOutflow,
 				usdOutflow,
 			},
-			want: []Transaction{
+			want: []finance.Transaction{
 				euroOutflow,
 				usdOutflow,
 			},
@@ -155,7 +155,7 @@ func TestFilterOutflowsBoundaryCases(t *testing.T) {
 }
 
 func TestGroupTransactionsByDescription(t *testing.T) {
-	input := []Transaction{
+	input := []finance.Transaction{
 		{
 			Description: "MAXIMA",
 			Amount: finance.Money{
@@ -195,18 +195,18 @@ func TestGroupTransactionsByDescription(t *testing.T) {
 
 	originalInput := slices.Clone(input)
 
-	want := map[string][]Transaction{
-		"MAXIMA": []Transaction{
+	want := map[string][]finance.Transaction{
+		"MAXIMA": []finance.Transaction{
 			input[0],
 			input[2],
 		},
-		"SPOTIFY": []Transaction{
+		"SPOTIFY": []finance.Transaction{
 			input[1],
 		},
-		"": []Transaction{
+		"": []finance.Transaction{
 			input[3],
 		},
-		"maxima": []Transaction{
+		"maxima": []finance.Transaction{
 			input[4],
 		},
 	}
@@ -214,12 +214,12 @@ func TestGroupTransactionsByDescription(t *testing.T) {
 	got := groupTransactionsByDescription(input)
 
 	if got == nil {
-		t.Fatal("groupTransactionsByDescription() returned a nil map")
+		t.Fatal("groupfinance.TransactionsByDescription() returned a nil map")
 	}
 
 	if len(got) != len(want) {
 		t.Fatalf(
-			"groupTransactionsByDescription() returned %d groups, want %d",
+			"groupfinance.TransactionsByDescription() returned %d groups, want %d",
 			len(got),
 			len(want),
 		)
@@ -244,7 +244,7 @@ func TestGroupTransactionsByDescription(t *testing.T) {
 
 	if !slices.Equal(input, originalInput) {
 		t.Errorf(
-			"groupTransactionsByDescription() modified input: got %+v, original %+v",
+			"groupfinance.TransactionsByDescription() modified input: got %+v, original %+v",
 			input,
 			originalInput,
 		)
@@ -268,7 +268,7 @@ func TestGroupTransactionsByDescription(t *testing.T) {
 func TestGroupTransactionsByDescriptionEmptyInput(t *testing.T) {
 	tests := []struct {
 		name  string
-		input []Transaction
+		input []finance.Transaction
 	}{
 		{
 			name:  "nil input",
@@ -276,7 +276,7 @@ func TestGroupTransactionsByDescriptionEmptyInput(t *testing.T) {
 		},
 		{
 			name:  "empty input",
-			input: []Transaction{},
+			input: []finance.Transaction{},
 		},
 	}
 
@@ -285,12 +285,12 @@ func TestGroupTransactionsByDescriptionEmptyInput(t *testing.T) {
 			got := groupTransactionsByDescription(tt.input)
 
 			if got == nil {
-				t.Fatal("groupTransactionsByDescription() returned a nil map")
+				t.Fatal("groupfinance.TransactionsByDescription() returned a nil map")
 			}
 
 			if len(got) != 0 {
 				t.Errorf(
-					"groupTransactionsByDescription() returned %d groups, want 0",
+					"groupfinance.TransactionsByDescription() returned %d groups, want 0",
 					len(got),
 				)
 			}
@@ -301,7 +301,7 @@ func TestGroupTransactionsByDescriptionEmptyInput(t *testing.T) {
 func TestSortedDescriptions(t *testing.T) {
 	tests := []struct {
 		name  string
-		input map[string][]Transaction
+		input map[string][]finance.Transaction
 		want  []string
 	}{
 		{
@@ -311,13 +311,13 @@ func TestSortedDescriptions(t *testing.T) {
 		},
 		{
 			name:  "empty map",
-			input: make(map[string][]Transaction),
+			input: make(map[string][]finance.Transaction),
 			want:  make([]string, 0),
 		},
 
 		{
 			name: "unsorted keys",
-			input: map[string][]Transaction{
+			input: map[string][]finance.Transaction{
 				"C": nil,
 				"B": nil,
 				"A": nil,
@@ -326,7 +326,7 @@ func TestSortedDescriptions(t *testing.T) {
 		},
 		{
 			name: "empty uppercase and lowercase keys",
-			input: map[string][]Transaction{
+			input: map[string][]finance.Transaction{
 				"":        nil,
 				"maxima":  nil,
 				"SPOTIFY": nil,

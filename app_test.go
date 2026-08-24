@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewAppCopiesInitialTransactions(t *testing.T) {
-	input := []Transaction{
+	input := []finance.Transaction{
 		{
 			Description: "Groceries",
 			Amount: finance.Money{
@@ -37,7 +37,7 @@ func TestNewAppCopiesInitialTransactions(t *testing.T) {
 func TestApplicationAddTransaction(t *testing.T) {
 	app := newApp(nil)
 
-	transaction := Transaction{
+	transaction := finance.Transaction{
 		Description: "Salary",
 		Amount: finance.Money{
 			Amount:   100_000,
@@ -47,7 +47,7 @@ func TestApplicationAddTransaction(t *testing.T) {
 
 	app.addTransaction(transaction)
 
-	want := []Transaction{
+	want := []finance.Transaction{
 		transaction,
 	}
 
@@ -65,7 +65,7 @@ func TestApplicationAddTransaction(t *testing.T) {
 func TestApplicationAddTransactionCopiesValue(t *testing.T) {
 	app := newApp(nil)
 
-	transaction := Transaction{
+	transaction := finance.Transaction{
 		Description: "Groceries",
 		Amount: finance.Money{
 			Amount:   -2_500,
@@ -78,7 +78,7 @@ func TestApplicationAddTransactionCopiesValue(t *testing.T) {
 	transaction.Description = "Changed original"
 	transaction.Amount.Amount = -9_999
 
-	want := []Transaction{
+	want := []finance.Transaction{
 		{
 			Description: "Groceries",
 			Amount: finance.Money{
@@ -100,7 +100,7 @@ func TestApplicationAddTransactionCopiesValue(t *testing.T) {
 }
 
 func TestApplicationTransactionsSnapshotIsIndependent(t *testing.T) {
-	app := newApp([]Transaction{
+	app := newApp([]finance.Transaction{
 		{
 			Description: "Spotify",
 			Amount: finance.Money{
@@ -114,11 +114,11 @@ func TestApplicationTransactionsSnapshotIsIndependent(t *testing.T) {
 
 	snapshot[0].Description = "Changed snapshot"
 	snapshot[0].Amount.Amount = -5_000
-	snapshot = append(snapshot, Transaction{
+	snapshot = append(snapshot, finance.Transaction{
 		Description: "Added only to snapshot",
 	})
 
-	want := []Transaction{
+	want := []finance.Transaction{
 		{
 			Description: "Spotify",
 			Amount: finance.Money{
@@ -153,7 +153,7 @@ func TestNewAppWithNilTransactions(t *testing.T) {
 		)
 	}
 
-	app.addTransaction(Transaction{
+	app.addTransaction(finance.Transaction{
 		Description: "Salary",
 		Amount: finance.Money{
 			Amount:   100_000,
@@ -172,7 +172,7 @@ func TestNewAppWithNilTransactions(t *testing.T) {
 func TestApplicationPreservesTransactionWithEmptyDescription(t *testing.T) {
 	app := newApp(nil)
 
-	transaction := Transaction{
+	transaction := finance.Transaction{
 		Description: "",
 		Amount: finance.Money{
 			Amount:   -1_000,
@@ -182,7 +182,7 @@ func TestApplicationPreservesTransactionWithEmptyDescription(t *testing.T) {
 
 	app.addTransaction(transaction)
 
-	want := []Transaction{
+	want := []finance.Transaction{
 		transaction,
 	}
 
