@@ -30,11 +30,11 @@ func TestPrepareStatementImportRevolut(t *testing.T) {
 		)
 	}
 
-	if got.source != sourceRevolut {
+	if got.source != Revolut {
 		t.Errorf(
 			"source = %q, want %q",
 			got.source,
-			sourceRevolut,
+			Revolut,
 		)
 	}
 
@@ -100,11 +100,11 @@ func TestPrepareStatementImportSwedbank(t *testing.T) {
 		)
 	}
 
-	if got.source != sourceSwedbank {
+	if got.source != Swedbank {
 		t.Errorf(
 			"source = %q, want %q",
 			got.source,
-			sourceSwedbank,
+			Swedbank,
 		)
 	}
 

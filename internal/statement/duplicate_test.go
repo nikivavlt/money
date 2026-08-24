@@ -7,7 +7,7 @@ import (
 
 func TestImportedTransactionIdentityUsesExternalID(t *testing.T) {
 	original := importedTransaction{
-		source:           sourceSwedbank,
+		source:           Swedbank,
 		accountText:      "account-1",
 		occurredAtText:   "2026-08-04",
 		amountText:       "10.00",
@@ -43,7 +43,7 @@ func TestImportedTransactionIdentityUsesExternalID(t *testing.T) {
 
 func TestImportedTransactionExternalIDIsScoped(t *testing.T) {
 	original := importedTransaction{
-		source:      sourceSwedbank,
+		source:      Swedbank,
 		accountText: "account-1",
 		externalID:  "record-123",
 	}
@@ -55,7 +55,7 @@ func TestImportedTransactionExternalIDIsScoped(t *testing.T) {
 		{
 			name: "different source",
 			change: func(transaction *importedTransaction) {
-				transaction.source = sourceRevolut
+				transaction.source = Revolut
 			},
 		},
 		{
@@ -90,7 +90,7 @@ func TestImportedTransactionIdentityUsesFingerprintWithoutExternalID(
 	t *testing.T,
 ) {
 	transaction := importedTransaction{
-		source:          sourceRevolut,
+		source:          Revolut,
 		accountText:     "Current",
 		occurredAtText:  "2026-08-04 10:00:00",
 		completedAtText: "2026-08-04 10:01:00",
@@ -120,7 +120,7 @@ func TestImportedTransactionIdentityUsesFingerprintWithoutExternalID(
 
 func TestImportedTransactionFingerprintUsesMaterialFields(t *testing.T) {
 	original := importedTransaction{
-		source:           sourceRevolut,
+		source:           Revolut,
 		accountText:      "Current",
 		occurredAtText:   "2026-08-04 10:00:00",
 		completedAtText:  "2026-08-04 10:01:00",
@@ -140,7 +140,7 @@ func TestImportedTransactionFingerprintUsesMaterialFields(t *testing.T) {
 		{
 			name: "source",
 			change: func(transaction *importedTransaction) {
-				transaction.source = sourceSwedbank
+				transaction.source = Swedbank
 			},
 		},
 		{
@@ -209,7 +209,7 @@ func TestImportedTransactionFingerprintUsesMaterialFields(t *testing.T) {
 
 func TestImportedTransactionIdentityTrimsSurroundingWhitespace(t *testing.T) {
 	original := importedTransaction{
-		source:           sourceSwedbank,
+		source:           Swedbank,
 		accountText:      "account-1",
 		occurredAtText:   "2026-08-04",
 		amountText:       "25.50",
@@ -240,7 +240,7 @@ func TestImportedTransactionIdentityTrimsSurroundingWhitespace(t *testing.T) {
 
 func TestWhitespaceExternalIDUsesFingerprint(t *testing.T) {
 	transaction := importedTransaction{
-		source:        sourceSwedbank,
+		source:        Swedbank,
 		accountText:   "account-1",
 		externalID:    " \t\n ",
 		amountText:    "10.00",
@@ -270,7 +270,7 @@ func TestHashIdentityPartsPreservesFieldBoundaries(t *testing.T) {
 
 func TestTransactionIdentityCanBeUsedAsMapKey(t *testing.T) {
 	transaction := importedTransaction{
-		source:      sourceSwedbank,
+		source:      Swedbank,
 		accountText: "account-1",
 		externalID:  "record-123",
 	}
@@ -289,12 +289,12 @@ func TestTransactionIdentityCanBeUsedAsMapKey(t *testing.T) {
 func TestDeduplicateImportedTransactionsWithoutDuplicates(t *testing.T) {
 	input := []importedTransaction{
 		{
-			source:      sourceSwedbank,
+			source:      Swedbank,
 			accountText: "account-1",
 			externalID:  "record-1",
 		},
 		{
-			source:      sourceSwedbank,
+			source:      Swedbank,
 			accountText: "account-1",
 			externalID:  "record-2",
 		},
@@ -321,7 +321,7 @@ func TestDeduplicateImportedTransactionsWithoutDuplicates(t *testing.T) {
 
 func TestDeduplicateImportedTransactionsByExternalID(t *testing.T) {
 	first := importedTransaction{
-		source:           sourceSwedbank,
+		source:           Swedbank,
 		accountText:      "account-1",
 		occurredAtText:   "2026-08-04",
 		amountText:       "10.00",
@@ -371,7 +371,7 @@ func TestDeduplicateImportedTransactionsByExternalID(t *testing.T) {
 
 func TestDeduplicateImportedTransactionsByFingerprint(t *testing.T) {
 	first := importedTransaction{
-		source:          sourceRevolut,
+		source:          Revolut,
 		accountText:     "Current",
 		occurredAtText:  "2026-08-04 10:00:00",
 		completedAtText: "2026-08-04 10:01:00",
@@ -420,7 +420,7 @@ func TestDeduplicateImportedTransactionsByFingerprint(t *testing.T) {
 
 func TestDeduplicateImportedTransactionsDetectsConflict(t *testing.T) {
 	first := importedTransaction{
-		source:           sourceSwedbank,
+		source:           Swedbank,
 		accountText:      "account-1",
 		occurredAtText:   "2026-08-04",
 		amountText:       "10.00",
@@ -472,7 +472,7 @@ func TestDeduplicateImportedTransactionsMultipleCopiesReferToFirst(
 	t *testing.T,
 ) {
 	transaction := importedTransaction{
-		source:          sourceRevolut,
+		source:          Revolut,
 		accountText:     "Current",
 		completedAtText: "2026-08-04 10:01:00",
 		amountText:      "-12.34",
@@ -521,19 +521,19 @@ func TestDeduplicateImportedTransactionsMultipleCopiesReferToFirst(
 
 func TestDeduplicateImportedTransactionsPreservesOrder(t *testing.T) {
 	first := importedTransaction{
-		source:      sourceSwedbank,
+		source:      Swedbank,
 		accountText: "account-1",
 		externalID:  "record-1",
 	}
 
 	second := importedTransaction{
-		source:      sourceSwedbank,
+		source:      Swedbank,
 		accountText: "account-1",
 		externalID:  "record-2",
 	}
 
 	third := importedTransaction{
-		source:      sourceSwedbank,
+		source:      Swedbank,
 		accountText: "account-1",
 		externalID:  "record-3",
 	}
@@ -590,7 +590,7 @@ func TestDeduplicateImportedTransactionsScopesExternalIDByAccount(
 	t *testing.T,
 ) {
 	first := importedTransaction{
-		source:      sourceSwedbank,
+		source:      Swedbank,
 		accountText: "account-1",
 		externalID:  "record-123",
 	}

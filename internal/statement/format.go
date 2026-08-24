@@ -15,7 +15,7 @@ var (
 
 func detectStatementSource(
 	header []string,
-) (statementSource, error) {
+) (Source, error) {
 	_, revolutErr := revolutColumnIndexes(header)
 	_, swedbankErr := swedbankColumnIndexes(header)
 
@@ -24,10 +24,10 @@ func detectStatementSource(
 
 	switch {
 	case revolutMatches && !swedbankMatches:
-		return sourceRevolut, nil
+		return Revolut, nil
 
 	case !revolutMatches && swedbankMatches:
-		return sourceSwedbank, nil
+		return Swedbank, nil
 
 	case revolutMatches && swedbankMatches:
 		return "", fmt.Errorf(

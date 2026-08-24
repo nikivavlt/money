@@ -26,7 +26,7 @@ func (e *duplicateConflictError) Unwrap() error {
 }
 
 type preparedStatementImport struct {
-	source       statementSource
+	source       Source
 	transactions []finance.Transaction
 	duplicates   []duplicateCandidate
 	conflicts    []duplicateConflict

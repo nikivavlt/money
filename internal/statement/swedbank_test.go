@@ -498,7 +498,7 @@ LT00-TEST-ACCOUNT,2026-08-01,Example Shop,"Card payment, Vilnius",25.00,EUR,D,,K
 
 	want := []importedTransaction{
 		{
-			source:           sourceSwedbank,
+			source:           Swedbank,
 			accountText:      "LT00-TEST-ACCOUNT",
 			occurredAtText:   "2026-08-01",
 			completedAtText:  "",

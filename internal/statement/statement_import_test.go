@@ -19,13 +19,13 @@ func TestImportStatementRevolut(t *testing.T) {
 		t.Fatalf("importStatement() returned an unexpected error: %v", err)
 	}
 
-	if source != sourceRevolut {
-		t.Errorf("importStatement() source = %q, want %q", source, sourceRevolut)
+	if source != Revolut {
+		t.Errorf("importStatement() source = %q, want %q", source, Revolut)
 	}
 
 	want := []importedTransaction{
 		{
-			source:          sourceRevolut,
+			source:          Revolut,
 			accountText:     "Current",
 			occurredAtText:  "2026-08-04 10:00:00",
 			completedAtText: "2026-08-04 10:01:00",
@@ -55,13 +55,13 @@ func TestImportStatementSwedbank(t *testing.T) {
 		t.Fatalf("importStatement() returned an unexpected error: %v", err)
 	}
 
-	if source != sourceSwedbank {
-		t.Errorf("importStatement() source = %q, want %q", source, sourceSwedbank)
+	if source != Swedbank {
+		t.Errorf("importStatement() source = %q, want %q", source, Swedbank)
 	}
 
 	want := []importedTransaction{
 		{
-			source:           sourceSwedbank,
+			source:           Swedbank,
 			accountText:      "LT123",
 			occurredAtText:   "2026-08-05",
 			amountText:       "25.50",

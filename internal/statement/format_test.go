@@ -9,7 +9,7 @@ func TestDetectStatementSource(t *testing.T) {
 	tests := []struct {
 		name   string
 		header []string
-		want   statementSource
+		want   Source
 	}{
 		{
 			name: "Revolut",
@@ -25,7 +25,7 @@ func TestDetectStatementSource(t *testing.T) {
 				"State",
 				"Balance",
 			},
-			want: sourceRevolut,
+			want: Revolut,
 		},
 		{
 			name: "Swedbank",
@@ -48,7 +48,7 @@ func TestDetectStatementSource(t *testing.T) {
 				"Beneficiary party",
 				"",
 			},
-			want: sourceSwedbank,
+			want: Swedbank,
 		},
 		{
 			name: "reordered Revolut headers",
@@ -63,7 +63,7 @@ func TestDetectStatementSource(t *testing.T) {
 				"Started Date",
 				"Type",
 			},
-			want: sourceRevolut,
+			want: Revolut,
 		},
 	}
 

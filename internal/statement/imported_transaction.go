@@ -1,14 +1,14 @@
 package statement
 
-type statementSource string
+type Source string
 
 const (
-	sourceRevolut  statementSource = "revolut"
-	sourceSwedbank statementSource = "swedbank"
+	Revolut  Source = "revolut"
+	Swedbank Source = "swedbank"
 )
 
 type importedTransaction struct {
-	source statementSource
+	source Source
 
 	accountText     string
 	occurredAtText  string

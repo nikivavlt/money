@@ -9,7 +9,7 @@ import (
 func importStatement(
 	input io.Reader,
 ) (
-	statementSource,
+	Source,
 	[]importedTransaction,
 	error,
 ) {
@@ -33,7 +33,7 @@ func importStatement(
 	}
 
 	switch source {
-	case sourceRevolut:
+	case Revolut:
 		rows, err := readRevolutRowsAfterHeader(
 			reader,
 			header,
@@ -45,11 +45,11 @@ func importStatement(
 			)
 		}
 
-		return sourceRevolut,
+		return Revolut,
 			revolutRowsToImportedTransactions(rows),
 			nil
 
-	case sourceSwedbank:
+	case Swedbank:
 		rows, err := readSwedbankRowsAfterHeader(
 			reader,
 			header,
@@ -61,7 +61,7 @@ func importStatement(
 			)
 		}
 
-		return sourceSwedbank,
+		return Swedbank,
 			swedbankRowsToImportedTransactions(rows),
 			nil
 

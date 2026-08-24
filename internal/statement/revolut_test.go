@@ -446,7 +446,7 @@ Card Payment,Current,2026-08-01 10:00:00,,"Shop, Vilnius",-12.34,1.00,EUR,PENDIN
 
 	want := []importedTransaction{
 		{
-			source:           sourceRevolut,
+			source:           Revolut,
 			accountText:      "Current",
 			occurredAtText:   "2026-08-01 10:00:00",
 			completedAtText:  "",

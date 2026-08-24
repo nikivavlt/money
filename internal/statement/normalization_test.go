@@ -19,7 +19,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 		{
 			name: "negative Revolut EUR amount",
 			input: importedTransaction{
-				source:       sourceRevolut,
+				source:       Revolut,
 				amountText:   "-12.34",
 				feeText:      "0.00",
 				currencyText: "EUR",
@@ -32,7 +32,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 		{
 			name: "positive Revolut EUR amount",
 			input: importedTransaction{
-				source:       sourceRevolut,
+				source:       Revolut,
 				amountText:   "1000.00",
 				feeText:      "0.00",
 				currencyText: "EUR",
@@ -45,7 +45,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 		{
 			name: "Swedbank debit becomes negative",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "25.00",
 				currencyText:  "EUR",
 				directionText: "D",
@@ -58,7 +58,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 		{
 			name: "Swedbank credit remains positive",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "1000.00",
 				currencyText:  "EUR",
 				directionText: "K",
@@ -71,7 +71,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 		{
 			name: "Swedbank debit zero remains zero",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "0.00",
 				currencyText:  "EUR",
 				directionText: "D",
@@ -84,7 +84,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 		{
 			name: "Swedbank USD debit",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "12.34",
 				currencyText:  "USD",
 				directionText: "D",
@@ -97,7 +97,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 		{
 			name: "surrounding whitespace",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    " 12.34 ",
 				currencyText:  " EUR ",
 				directionText: " D ",
@@ -140,7 +140,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "unsupported source",
 			input: importedTransaction{
-				source:       statementSource("unknown"),
+				source:       Source("unknown"),
 				amountText:   "12.34",
 				currencyText: "EUR",
 			},
@@ -149,7 +149,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "unsupported Revolut currency",
 			input: importedTransaction{
-				source:       sourceRevolut,
+				source:       Revolut,
 				amountText:   "12.34",
 				feeText:      "0.00",
 				currencyText: "GBP",
@@ -160,7 +160,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "lowercase Revolut currency",
 			input: importedTransaction{
-				source:       sourceRevolut,
+				source:       Revolut,
 				amountText:   "12.34",
 				feeText:      "0.00",
 				currencyText: "eur",
@@ -171,7 +171,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "unsupported Swedbank currency",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "12.34",
 				currencyText:  "GBP",
 				directionText: "D",
@@ -182,7 +182,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "nonzero Revolut fee",
 			input: importedTransaction{
-				source:       sourceRevolut,
+				source:       Revolut,
 				amountText:   "-12.34",
 				feeText:      "0.50",
 				currencyText: "EUR",
@@ -192,7 +192,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "invalid Revolut fee",
 			input: importedTransaction{
-				source:       sourceRevolut,
+				source:       Revolut,
 				amountText:   "-12.34",
 				feeText:      "not-money",
 				currencyText: "EUR",
@@ -202,7 +202,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "negative Swedbank raw amount",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "-25.00",
 				currencyText:  "EUR",
 				directionText: "D",
@@ -212,7 +212,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "unknown Swedbank direction",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "25.00",
 				currencyText:  "EUR",
 				directionText: "X",
@@ -222,7 +222,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "empty Swedbank direction",
 			input: importedTransaction{
-				source:        sourceSwedbank,
+				source:        Swedbank,
 				amountText:    "25.00",
 				currencyText:  "EUR",
 				directionText: "",
@@ -232,7 +232,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 		{
 			name: "Revolut amount overflow",
 			input: importedTransaction{
-				source:       sourceRevolut,
+				source:       Revolut,
 				amountText:   "92233720368547758.08",
 				feeText:      "0.00",
 				currencyText: "EUR",
@@ -298,7 +298,7 @@ func TestNormalizeImportedDate(t *testing.T) {
 		{
 			name: "Revolut uses completed date",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				occurredAtText:  "2026-08-01 09:30:00",
 				completedAtText: "2026-08-02 10:15:30",
 				stateText:       "COMPLETED",
@@ -317,7 +317,7 @@ func TestNormalizeImportedDate(t *testing.T) {
 		{
 			name: "Revolut trims state and date",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				occurredAtText:  "2026-08-01 09:30:00",
 				completedAtText: " 2026-08-02 10:15:30 ",
 				stateText:       " COMPLETED ",
@@ -336,7 +336,7 @@ func TestNormalizeImportedDate(t *testing.T) {
 		{
 			name: "Swedbank date becomes local midnight",
 			input: importedTransaction{
-				source:         sourceSwedbank,
+				source:         Swedbank,
 				occurredAtText: "2026-08-03",
 			},
 			want: time.Date(
@@ -353,7 +353,7 @@ func TestNormalizeImportedDate(t *testing.T) {
 		{
 			name: "Swedbank trims date",
 			input: importedTransaction{
-				source:         sourceSwedbank,
+				source:         Swedbank,
 				occurredAtText: " 2026-08-04 ",
 			},
 			want: time.Date(
@@ -420,7 +420,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "nil location",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				completedAtText: "2026-08-01 10:00:00",
 				stateText:       "COMPLETED",
 			},
@@ -430,7 +430,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "pending Revolut transaction",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				completedAtText: "",
 				stateText:       "PENDING",
 			},
@@ -441,7 +441,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "pending state with surrounding whitespace",
 			input: importedTransaction{
-				source:    sourceRevolut,
+				source:    Revolut,
 				stateText: " PENDING ",
 			},
 			location:          location,
@@ -451,7 +451,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "unsupported Revolut state",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				completedAtText: "2026-08-01 10:00:00",
 				stateText:       "REVERTED",
 			},
@@ -461,7 +461,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "empty Revolut state",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				completedAtText: "2026-08-01 10:00:00",
 				stateText:       "",
 			},
@@ -471,7 +471,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "completed Revolut transaction without completed date",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				completedAtText: "",
 				stateText:       "COMPLETED",
 			},
@@ -481,7 +481,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "invalid Revolut completed date",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				completedAtText: "2026-02-30 10:00:00",
 				stateText:       "COMPLETED",
 			},
@@ -491,7 +491,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "invalid Swedbank date",
 			input: importedTransaction{
-				source:         sourceSwedbank,
+				source:         Swedbank,
 				occurredAtText: "2026-02-30",
 			},
 			location:          location,
@@ -500,7 +500,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "empty Swedbank date",
 			input: importedTransaction{
-				source:         sourceSwedbank,
+				source:         Swedbank,
 				occurredAtText: "",
 			},
 			location:          location,
@@ -509,7 +509,7 @@ func TestNormalizeImportedDateErrors(t *testing.T) {
 		{
 			name: "unsupported source",
 			input: importedTransaction{
-				source: statementSource("unknown"),
+				source: Source("unknown"),
 			},
 			location:          location,
 			wantErrorContains: "unsupported statement source",
@@ -575,7 +575,7 @@ func TestNormalizeImportedTransaction(t *testing.T) {
 		{
 			name: "completed Revolut transaction",
 			input: importedTransaction{
-				source:           sourceRevolut,
+				source:           Revolut,
 				accountText:      "Current",
 				occurredAtText:   "2026-08-01 09:30:00",
 				completedAtText:  "2026-08-02 10:15:30",
@@ -609,7 +609,7 @@ func TestNormalizeImportedTransaction(t *testing.T) {
 		{
 			name: "Swedbank debit transaction",
 			input: importedTransaction{
-				source:           sourceSwedbank,
+				source:           Swedbank,
 				accountText:      "LT00-TEST-ACCOUNT",
 				occurredAtText:   "2026-08-03",
 				amountText:       "25.00",
@@ -642,7 +642,7 @@ func TestNormalizeImportedTransaction(t *testing.T) {
 		{
 			name: "Swedbank credit transaction",
 			input: importedTransaction{
-				source:           sourceSwedbank,
+				source:           Swedbank,
 				occurredAtText:   "2026-08-04",
 				amountText:       "1000.00",
 				currencyText:     "EUR",
@@ -738,7 +738,7 @@ func TestNormalizeImportedTransactionErrors(t *testing.T) {
 		{
 			name: "pending transaction is classified before invalid money",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				stateText:       "PENDING",
 				completedAtText: "",
 				amountText:      "not-money",
@@ -752,7 +752,7 @@ func TestNormalizeImportedTransactionErrors(t *testing.T) {
 		{
 			name: "unsupported currency remains inspectable",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				stateText:       "COMPLETED",
 				completedAtText: "2026-08-01 10:00:00",
 				amountText:      "12.34",
@@ -766,7 +766,7 @@ func TestNormalizeImportedTransactionErrors(t *testing.T) {
 		{
 			name: "nonzero Revolut fee",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				stateText:       "COMPLETED",
 				completedAtText: "2026-08-01 10:00:00",
 				amountText:      "-12.34",
@@ -779,7 +779,7 @@ func TestNormalizeImportedTransactionErrors(t *testing.T) {
 		{
 			name: "nil location",
 			input: importedTransaction{
-				source:          sourceRevolut,
+				source:          Revolut,
 				stateText:       "COMPLETED",
 				completedAtText: "2026-08-01 10:00:00",
 				amountText:      "-12.34",
@@ -838,7 +838,7 @@ func TestNormalizeImportedTransactions(t *testing.T) {
 
 	imported := []importedTransaction{
 		{
-			source:           sourceSwedbank,
+			source:           Swedbank,
 			occurredAtText:   "2026-08-04",
 			amountText:       "25.50",
 			currencyText:     "EUR",
@@ -847,7 +847,7 @@ func TestNormalizeImportedTransactions(t *testing.T) {
 			counterpartyText: "MAXIMA",
 		},
 		{
-			source:          sourceRevolut,
+			source:          Revolut,
 			completedAtText: "2026-08-05 14:30:00",
 			amountText:      "100.00",
 			feeText:         "0",
@@ -944,7 +944,7 @@ func TestNormalizeImportedTransactionsIdentifiesFailingTransaction(t *testing.T)
 
 	imported := []importedTransaction{
 		{
-			source:           sourceSwedbank,
+			source:           Swedbank,
 			occurredAtText:   "2026-08-04",
 			amountText:       "10.00",
 			currencyText:     "EUR",
@@ -953,7 +953,7 @@ func TestNormalizeImportedTransactionsIdentifiesFailingTransaction(t *testing.T)
 			counterpartyText: "MAXIMA",
 		},
 		{
-			source:           sourceSwedbank,
+			source:           Swedbank,
 			occurredAtText:   "2026-08-05",
 			amountText:       "invalid amount",
 			currencyText:     "EUR",
@@ -990,7 +990,7 @@ func TestNormalizeImportedTransactionsPreservesPendingError(t *testing.T) {
 
 	imported := []importedTransaction{
 		{
-			source:          sourceRevolut,
+			source:          Revolut,
 			completedAtText: "",
 			amountText:      "-10.00",
 			feeText:         "0",
@@ -1025,7 +1025,7 @@ func TestNormalizeImportedTransactionsPreservesPendingError(t *testing.T) {
 func TestNormalizeImportedTransactionsRejectsNilLocation(t *testing.T) {
 	imported := []importedTransaction{
 		{
-			source:           sourceSwedbank,
+			source:           Swedbank,
 			occurredAtText:   "2026-08-04",
 			amountText:       "10.00",
 			currencyText:     "EUR",

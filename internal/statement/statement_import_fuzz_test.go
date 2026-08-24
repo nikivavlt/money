@@ -54,7 +54,7 @@ Card Payment,Current,2026-08-04 10:00:00,2026-08-04 10:01:00,"unterminated`,
 		}
 
 		switch source {
-		case sourceRevolut, sourceSwedbank:
+		case Revolut, Swedbank:
 			// Recognized source.
 		default:
 			t.Fatalf(

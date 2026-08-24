@@ -131,7 +131,7 @@ func readSwedbankRows(input io.Reader) ([]swedbankRow, error) {
 
 func (r swedbankRow) toImportedTransaction() importedTransaction {
 	return importedTransaction{
-		source:           sourceSwedbank,
+		source:           Swedbank,
 		accountText:      r.accountNumberText,
 		occurredAtText:   r.dateText,
 		completedAtText:  "",

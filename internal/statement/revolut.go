@@ -100,7 +100,7 @@ func readRevolutRows(input io.Reader) ([]revolutRow, error) {
 
 func (r revolutRow) toImportedTransaction() importedTransaction {
 	return importedTransaction{
-		source:           sourceRevolut,
+		source:           Revolut,
 		accountText:      r.product,
 		occurredAtText:   r.startedDateText,
 		completedAtText:  r.completedDateText,

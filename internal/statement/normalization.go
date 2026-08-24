@@ -23,10 +23,10 @@ func normalizeImportedDate(
 	}
 
 	switch transaction.source {
-	case sourceRevolut:
+	case Revolut:
 		return normalizeRevolutDate(transaction, location)
 
-	case sourceSwedbank:
+	case Swedbank:
 		return normalizeSwedbankDate(transaction, location)
 
 	default:
@@ -108,10 +108,10 @@ func normalizeImportedMoney(
 	transaction importedTransaction,
 ) (finance.Money, error) {
 	switch transaction.source {
-	case sourceRevolut:
+	case Revolut:
 		return normalizeRevolutMoney(transaction)
 
-	case sourceSwedbank:
+	case Swedbank:
 		return normalizeSwedbankMoney(transaction)
 
 	default:
