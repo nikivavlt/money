@@ -1,9 +1,12 @@
 package main
 
-import "slices"
+import (
+	"money/internal/finance"
+	"slices"
+)
 
-func filterOutflows(transactions []Transaction) []Transaction {
-	filtered := make([]Transaction, 0)
+func filterOutflows(transactions []finance.Transaction) []finance.Transaction {
+	filtered := make([]finance.Transaction, 0)
 
 	for _, t := range transactions {
 		if t.IsOutflow() {
@@ -14,8 +17,8 @@ func filterOutflows(transactions []Transaction) []Transaction {
 	return filtered
 }
 
-func groupTransactionsByDescription(transactions []Transaction) map[string][]Transaction {
-	grouped := make(map[string][]Transaction)
+func groupTransactionsByDescription(transactions []finance.Transaction) map[string][]finance.Transaction {
+	grouped := make(map[string][]finance.Transaction)
 
 	for _, t := range transactions {
 		grouped[t.Description] = append(grouped[t.Description], t)
@@ -24,7 +27,7 @@ func groupTransactionsByDescription(transactions []Transaction) map[string][]Tra
 	return grouped
 }
 
-func sortedDescriptions(grouped map[string][]Transaction) []string {
+func sortedDescriptions(grouped map[string][]finance.Transaction) []string {
 	descriptions := make([]string, 0, len(grouped))
 
 	for description := range grouped {

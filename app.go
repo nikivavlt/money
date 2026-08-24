@@ -1,13 +1,16 @@
 package main
 
-import "slices"
+import (
+	"money/internal/finance"
+	"slices"
+)
 
 type app struct {
-	transactions []Transaction
+	transactions []finance.Transaction
 }
 
 func newApp(
-	transactions []Transaction,
+	transactions []finance.Transaction,
 ) *app {
 	return &app{
 		transactions: slices.Clone(transactions),
@@ -15,7 +18,7 @@ func newApp(
 }
 
 func (a *app) addTransaction(
-	transaction Transaction,
+	transaction finance.Transaction,
 ) {
 	a.transactions = append(
 		a.transactions,
@@ -23,6 +26,6 @@ func (a *app) addTransaction(
 	)
 }
 
-func (a *app) transactionsSnapshot() []Transaction {
+func (a *app) transactionsSnapshot() []finance.Transaction {
 	return slices.Clone(a.transactions)
 }

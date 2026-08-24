@@ -1,6 +1,7 @@
 package main
 
 import (
+	"money/internal/finance"
 	"slices"
 	"testing"
 )
@@ -9,30 +10,30 @@ func TestFilterOutflows(t *testing.T) {
 	input := []Transaction{
 		{
 			Description: "Salary",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   100_000,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
 			Description: "Groceries",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -2_500,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
 			Description: "Zero",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   0,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
 			Description: "Transport",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -750,
-				Currency: USD,
+				Currency: finance.USD,
 			},
 		},
 	}
@@ -76,17 +77,17 @@ func TestFilterOutflows(t *testing.T) {
 func TestFilterOutflowsBoundaryCases(t *testing.T) {
 	euroOutflow := Transaction{
 		Description: "EUR outflow",
-		Amount: Money{
+		Amount: finance.Money{
 			Amount:   -100,
-			Currency: EUR,
+			Currency: finance.EUR,
 		},
 	}
 
 	usdOutflow := Transaction{
 		Description: "USD outflow",
-		Amount: Money{
+		Amount: finance.Money{
 			Amount:   -200,
-			Currency: USD,
+			Currency: finance.USD,
 		},
 	}
 
@@ -110,16 +111,16 @@ func TestFilterOutflowsBoundaryCases(t *testing.T) {
 			input: []Transaction{
 				{
 					Description: "Income",
-					Amount: Money{
+					Amount: finance.Money{
 						Amount:   1_000,
-						Currency: EUR,
+						Currency: finance.EUR,
 					},
 				},
 				{
 					Description: "Zero",
-					Amount: Money{
+					Amount: finance.Money{
 						Amount:   0,
-						Currency: EUR,
+						Currency: finance.EUR,
 					},
 				},
 			},
@@ -157,37 +158,37 @@ func TestGroupTransactionsByDescription(t *testing.T) {
 	input := []Transaction{
 		{
 			Description: "MAXIMA",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -1_000,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
 			Description: "SPOTIFY",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -999,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
 			Description: "MAXIMA",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -2_000,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
 			Description: "",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -500,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
 			Description: "maxima",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -300,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 	}

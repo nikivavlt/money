@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"money/finance"
+	"money/internal/finance"
 )
 
 type Transaction = finance.Transaction

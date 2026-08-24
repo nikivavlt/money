@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"money/internal/finance"
 	"slices"
 	"strings"
 	"testing"
@@ -44,9 +45,9 @@ func TestPrepareStatementImportRevolut(t *testing.T) {
 				10, 1, 0, 0,
 				location,
 			),
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -1_234,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 			Description: "SHOP, VILNIUS",
 		},
@@ -114,9 +115,9 @@ func TestPrepareStatementImportSwedbank(t *testing.T) {
 				0, 0, 0, 0,
 				location,
 			),
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -2_550,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 			Description:  "Card purchase, Vilnius",
 			Counterparty: "MAXIMA",

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"money/internal/finance"
 	"slices"
 	"testing"
 )
@@ -9,9 +10,9 @@ func TestNewAppCopiesInitialTransactions(t *testing.T) {
 	input := []Transaction{
 		{
 			Description: "Groceries",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -2_500,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 	}
@@ -38,9 +39,9 @@ func TestApplicationAddTransaction(t *testing.T) {
 
 	transaction := Transaction{
 		Description: "Salary",
-		Amount: Money{
+		Amount: finance.Money{
 			Amount:   100_000,
-			Currency: EUR,
+			Currency: finance.EUR,
 		},
 	}
 
@@ -66,9 +67,9 @@ func TestApplicationAddTransactionCopiesValue(t *testing.T) {
 
 	transaction := Transaction{
 		Description: "Groceries",
-		Amount: Money{
+		Amount: finance.Money{
 			Amount:   -2_500,
-			Currency: EUR,
+			Currency: finance.EUR,
 		},
 	}
 
@@ -80,9 +81,9 @@ func TestApplicationAddTransactionCopiesValue(t *testing.T) {
 	want := []Transaction{
 		{
 			Description: "Groceries",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -2_500,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 	}
@@ -102,9 +103,9 @@ func TestApplicationTransactionsSnapshotIsIndependent(t *testing.T) {
 	app := newApp([]Transaction{
 		{
 			Description: "Spotify",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -999,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 	})
@@ -120,9 +121,9 @@ func TestApplicationTransactionsSnapshotIsIndependent(t *testing.T) {
 	want := []Transaction{
 		{
 			Description: "Spotify",
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -999,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 	}
@@ -154,9 +155,9 @@ func TestNewAppWithNilTransactions(t *testing.T) {
 
 	app.addTransaction(Transaction{
 		Description: "Salary",
-		Amount: Money{
+		Amount: finance.Money{
 			Amount:   100_000,
-			Currency: EUR,
+			Currency: finance.EUR,
 		},
 	})
 
@@ -173,9 +174,9 @@ func TestApplicationPreservesTransactionWithEmptyDescription(t *testing.T) {
 
 	transaction := Transaction{
 		Description: "",
-		Amount: Money{
+		Amount: finance.Money{
 			Amount:   -1_000,
-			Currency: EUR,
+			Currency: finance.EUR,
 		},
 	}
 

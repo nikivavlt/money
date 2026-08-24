@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"money/internal/finance"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,7 +14,7 @@ func TestNormalizeImportedMoney(t *testing.T) {
 	tests := []struct {
 		name  string
 		input importedTransaction
-		want  Money
+		want  finance.Money
 	}{
 		{
 			name: "negative Revolut EUR amount",
@@ -23,9 +24,9 @@ func TestNormalizeImportedMoney(t *testing.T) {
 				feeText:      "0.00",
 				currencyText: "EUR",
 			},
-			want: Money{
+			want: finance.Money{
 				Amount:   -1_234,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
@@ -36,9 +37,9 @@ func TestNormalizeImportedMoney(t *testing.T) {
 				feeText:      "0.00",
 				currencyText: "EUR",
 			},
-			want: Money{
+			want: finance.Money{
 				Amount:   100_000,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
@@ -49,9 +50,9 @@ func TestNormalizeImportedMoney(t *testing.T) {
 				currencyText:  "EUR",
 				directionText: "D",
 			},
-			want: Money{
+			want: finance.Money{
 				Amount:   -2_500,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
@@ -62,9 +63,9 @@ func TestNormalizeImportedMoney(t *testing.T) {
 				currencyText:  "EUR",
 				directionText: "K",
 			},
-			want: Money{
+			want: finance.Money{
 				Amount:   100_000,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
@@ -75,9 +76,9 @@ func TestNormalizeImportedMoney(t *testing.T) {
 				currencyText:  "EUR",
 				directionText: "D",
 			},
-			want: Money{
+			want: finance.Money{
 				Amount:   0,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 		{
@@ -88,9 +89,9 @@ func TestNormalizeImportedMoney(t *testing.T) {
 				currencyText:  "USD",
 				directionText: "D",
 			},
-			want: Money{
+			want: finance.Money{
 				Amount:   -1_234,
-				Currency: USD,
+				Currency: finance.USD,
 			},
 		},
 		{
@@ -101,9 +102,9 @@ func TestNormalizeImportedMoney(t *testing.T) {
 				currencyText:  " EUR ",
 				directionText: " D ",
 			},
-			want: Money{
+			want: finance.Money{
 				Amount:   -1_234,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 		},
 	}
@@ -153,7 +154,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 				feeText:      "0.00",
 				currencyText: "GBP",
 			},
-			wantError:         ErrUnsupportedCurrency,
+			wantError:         finance.ErrUnsupportedCurrency,
 			wantErrorContains: "unsupported currency",
 		},
 		{
@@ -164,7 +165,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 				feeText:      "0.00",
 				currencyText: "eur",
 			},
-			wantError:         ErrUnsupportedCurrency,
+			wantError:         finance.ErrUnsupportedCurrency,
 			wantErrorContains: "unsupported currency",
 		},
 		{
@@ -175,7 +176,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 				currencyText:  "GBP",
 				directionText: "D",
 			},
-			wantError:         ErrUnsupportedCurrency,
+			wantError:         finance.ErrUnsupportedCurrency,
 			wantErrorContains: "unsupported currency",
 		},
 		{
@@ -250,7 +251,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 				)
 			}
 
-			if got != (Money{}) {
+			if got != (finance.Money{}) {
 				t.Errorf(
 					"normalizeImportedMoney() returned %+v with an error, want zero Money",
 					got,
@@ -597,9 +598,9 @@ func TestNormalizeImportedTransaction(t *testing.T) {
 					0,
 					location,
 				),
-				Amount: Money{
+				Amount: finance.Money{
 					Amount:   -1_234,
-					Currency: EUR,
+					Currency: finance.EUR,
 				},
 				Description:  "  Shop, Vilnius  ",
 				Counterparty: "",
@@ -630,9 +631,9 @@ func TestNormalizeImportedTransaction(t *testing.T) {
 					0,
 					location,
 				),
-				Amount: Money{
+				Amount: finance.Money{
 					Amount:   -2_500,
-					Currency: EUR,
+					Currency: finance.EUR,
 				},
 				Description:  "Card payment, Vilnius",
 				Counterparty: "Example Shop",
@@ -660,9 +661,9 @@ func TestNormalizeImportedTransaction(t *testing.T) {
 					0,
 					location,
 				),
-				Amount: Money{
+				Amount: finance.Money{
 					Amount:   100_000,
-					Currency: EUR,
+					Currency: finance.EUR,
 				},
 				Description:  "Salary",
 				Counterparty: "Example Employer",
@@ -759,7 +760,7 @@ func TestNormalizeImportedTransactionErrors(t *testing.T) {
 				currencyText:    "GBP",
 			},
 			location:          location,
-			wantError:         ErrUnsupportedCurrency,
+			wantError:         finance.ErrUnsupportedCurrency,
 			wantErrorContains: "unsupported currency",
 		},
 		{
@@ -871,9 +872,9 @@ func TestNormalizeImportedTransactions(t *testing.T) {
 				0, 0, 0, 0,
 				location,
 			),
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   -2_550,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 			Description:  "Card purchase",
 			Counterparty: "MAXIMA",
@@ -884,9 +885,9 @@ func TestNormalizeImportedTransactions(t *testing.T) {
 				14, 30, 0, 0,
 				location,
 			),
-			Amount: Money{
+			Amount: finance.Money{
 				Amount:   10_000,
-				Currency: EUR,
+				Currency: finance.EUR,
 			},
 			Description: "Salary",
 		},

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"money/internal/finance"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func (e *duplicateConflictError) Unwrap() error {
 
 type preparedStatementImport struct {
 	source       statementSource
-	transactions []Transaction
+	transactions []finance.Transaction
 	duplicates   []duplicateCandidate
 	conflicts    []duplicateConflict
 	summary      importSummary

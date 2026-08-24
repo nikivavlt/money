@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"money/internal/finance"
 	"strings"
 	"time"
 )
@@ -105,7 +106,7 @@ func normalizeSwedbankDate(
 
 func normalizeImportedMoney(
 	transaction importedTransaction,
-) (Money, error) {
+) (finance.Money, error) {
 	switch transaction.source {
 	case sourceRevolut:
 		return normalizeRevolutMoney(transaction)
@@ -114,7 +115,7 @@ func normalizeImportedMoney(
 		return normalizeSwedbankMoney(transaction)
 
 	default:
-		return Money{}, fmt.Errorf(
+		return finance.Money{}, fmt.Errorf(
 			"normalize imported money: unsupported statement source %q",
 			transaction.source,
 		)
@@ -123,29 +124,29 @@ func normalizeImportedMoney(
 
 func normalizeRevolutMoney(
 	transaction importedTransaction,
-) (Money, error) {
-	currency := Currency(
+) (finance.Money, error) {
+	currency := finance.Currency(
 		strings.TrimSpace(transaction.currencyText),
 	)
 
-	amount, err := parseMoney(transaction.amountText, currency)
+	amount, err := finance.ParseMoney(transaction.amountText, currency)
 	if err != nil {
-		return Money{}, fmt.Errorf(
+		return finance.Money{}, fmt.Errorf(
 			"normalize Revolut amount: %w",
 			err,
 		)
 	}
 
-	fee, err := parseMoney(transaction.feeText, currency)
+	fee, err := finance.ParseMoney(transaction.feeText, currency)
 	if err != nil {
-		return Money{}, fmt.Errorf(
+		return finance.Money{}, fmt.Errorf(
 			"normalize Revolut fee: %w",
 			err,
 		)
 	}
 
 	if fee.Amount != 0 {
-		return Money{}, fmt.Errorf(
+		return finance.Money{}, fmt.Errorf(
 			"normalize Revolut money: nonzero fee is not supported yet",
 		)
 	}
@@ -155,21 +156,21 @@ func normalizeRevolutMoney(
 
 func normalizeSwedbankMoney(
 	transaction importedTransaction,
-) (Money, error) {
-	currency := Currency(
+) (finance.Money, error) {
+	currency := finance.Currency(
 		strings.TrimSpace(transaction.currencyText),
 	)
 
-	amount, err := parseMoney(transaction.amountText, currency)
+	amount, err := finance.ParseMoney(transaction.amountText, currency)
 	if err != nil {
-		return Money{}, fmt.Errorf(
+		return finance.Money{}, fmt.Errorf(
 			"normalize Swedbank amount: %w",
 			err,
 		)
 	}
 
 	if amount.Amount < 0 {
-		return Money{}, fmt.Errorf(
+		return finance.Money{}, fmt.Errorf(
 			"normalize Swedbank money: amount must be non-negative before applying D/K",
 		)
 	}
@@ -185,7 +186,7 @@ func normalizeSwedbankMoney(
 		return amount, nil
 
 	default:
-		return Money{}, fmt.Errorf(
+		return finance.Money{}, fmt.Errorf(
 			"normalize Swedbank money: unsupported D/K value %q",
 			transaction.directionText,
 		)
@@ -195,10 +196,10 @@ func normalizeSwedbankMoney(
 func normalizeImportedTransaction(
 	imported importedTransaction,
 	location *time.Location,
-) (Transaction, error) {
+) (finance.Transaction, error) {
 	date, err := normalizeImportedDate(imported, location)
 	if err != nil {
-		return Transaction{}, fmt.Errorf(
+		return finance.Transaction{}, fmt.Errorf(
 			"normalize transaction date: %w",
 			err,
 		)
@@ -206,13 +207,13 @@ func normalizeImportedTransaction(
 
 	amount, err := normalizeImportedMoney(imported)
 	if err != nil {
-		return Transaction{}, fmt.Errorf(
+		return finance.Transaction{}, fmt.Errorf(
 			"normalize transaction money: %w",
 			err,
 		)
 	}
 
-	return Transaction{
+	return finance.Transaction{
 		Date:         date,
 		Amount:       amount,
 		Description:  imported.rawDescription,
@@ -223,8 +224,8 @@ func normalizeImportedTransaction(
 func normalizeImportedTransactions(
 	imported []importedTransaction,
 	location *time.Location,
-) ([]Transaction, error) {
-	normalized := make([]Transaction, 0, len(imported))
+) ([]finance.Transaction, error) {
+	normalized := make([]finance.Transaction, 0, len(imported))
 
 	for index, transaction := range imported {
 		result, err := normalizeImportedTransaction(transaction, location)
