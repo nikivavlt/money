@@ -125,8 +125,6 @@ func run(
 		fmt.Fprintf(stderr, "money: unknown command %q\n", command)
 		return 2
 	}
-
-	return 0
 }
 
 func printHelp(w io.Writer) {
