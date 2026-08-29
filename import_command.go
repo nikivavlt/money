@@ -17,7 +17,7 @@ func runImportCommand(
 	output io.Writer,
 	getenv func(string) string,
 ) error {
-	userID, err := parseImportUserID(getenv("MONEY_USER_ID"))
+	userID, err := parseConfiguredUserID(getenv("MONEY_USER_ID"))
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func runImportCommand(
 	return nil
 }
 
-func parseImportUserID(input string) (int64, error) {
+func parseConfiguredUserID(input string) (int64, error) {
 	normalized := strings.TrimSpace(input)
 	if normalized == "" {
 		return 0, fmt.Errorf("MONEY_USER_ID is empty")

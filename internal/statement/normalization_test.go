@@ -284,10 +284,7 @@ func TestNormalizeImportedMoneyErrors(t *testing.T) {
 func TestNormalizeImportedDate(t *testing.T) {
 	location, err := time.LoadLocation("Europe/Vilnius")
 	if err != nil {
-		t.Fatalf(
-			"time.LoadLocation() returned an unexpected error: %v",
-			err,
-		)
+		t.Fatalf("time.LoadLocation() returned an unexpected error: %v", err)
 	}
 
 	tests := []struct {
@@ -296,7 +293,7 @@ func TestNormalizeImportedDate(t *testing.T) {
 		want  time.Time
 	}{
 		{
-			name: "Revolut uses completed date",
+			name: "Revolut uses completed date at local midnight",
 			input: importedTransaction{
 				source:          Revolut,
 				occurredAtText:  "2026-08-01 09:30:00",
@@ -307,15 +304,15 @@ func TestNormalizeImportedDate(t *testing.T) {
 				2026,
 				time.August,
 				2,
-				10,
-				15,
-				30,
+				0,
+				0,
+				0,
 				0,
 				location,
 			),
 		},
 		{
-			name: "Revolut trims state and date",
+			name: "Revolut trims state and completed date at local midnight",
 			input: importedTransaction{
 				source:          Revolut,
 				occurredAtText:  "2026-08-01 09:30:00",
@@ -326,9 +323,9 @@ func TestNormalizeImportedDate(t *testing.T) {
 				2026,
 				time.August,
 				2,
-				10,
-				15,
-				30,
+				0,
+				0,
+				0,
 				0,
 				location,
 			),
@@ -371,31 +368,17 @@ func TestNormalizeImportedDate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := normalizeImportedDate(
-				tt.input,
-				location,
-			)
+			got, err := normalizeImportedDate(tt.input, location)
 			if err != nil {
-				t.Fatalf(
-					"normalizeImportedDate() returned an unexpected error: %v",
-					err,
-				)
+				t.Fatalf("normalizeImportedDate() returned an unexpected error: %v", err)
 			}
 
 			if !got.Equal(tt.want) {
-				t.Errorf(
-					"normalizeImportedDate() = %v, want %v",
-					got,
-					tt.want,
-				)
+				t.Errorf("normalizeImportedDate() = %v, want %v", got, tt.want)
 			}
 
 			if got.Location() != location {
-				t.Errorf(
-					"normalizeImportedDate() location = %q, want %q",
-					got.Location(),
-					location,
-				)
+				t.Errorf("normalizeImportedDate() location = %q, want %q", got.Location(), location)
 			}
 		})
 	}
@@ -592,9 +575,9 @@ func TestNormalizeImportedTransaction(t *testing.T) {
 					2026,
 					time.August,
 					2,
-					10,
-					15,
-					30,
+					0,
+					0,
+					0,
 					0,
 					location,
 				),
@@ -859,10 +842,7 @@ func TestNormalizeImportedTransactions(t *testing.T) {
 
 	got, err := normalizeImportedTransactions(imported, location)
 	if err != nil {
-		t.Fatalf(
-			"normalizeImportedTransactions() returned an unexpected error: %v",
-			err,
-		)
+		t.Fatalf("normalizeImportedTransactions() returned an unexpected error: %v", err)
 	}
 
 	want := []Transaction{
@@ -882,7 +862,7 @@ func TestNormalizeImportedTransactions(t *testing.T) {
 		{
 			Date: time.Date(
 				2026, time.August, 5,
-				14, 30, 0, 0,
+				0, 0, 0, 0,
 				location,
 			),
 			Amount: finance.Money{
@@ -894,11 +874,7 @@ func TestNormalizeImportedTransactions(t *testing.T) {
 	}
 
 	if !slices.Equal(got, want) {
-		t.Errorf(
-			"normalizeImportedTransactions() = %+v, want %+v",
-			got,
-			want,
-		)
+		t.Errorf("normalizeImportedTransactions() = %+v, want %+v", got, want)
 	}
 }
 

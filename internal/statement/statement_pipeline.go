@@ -29,15 +29,13 @@ type preparedTransaction struct {
 	normalized finance.Transaction
 	rawRecord  []string
 }
-
 type preparedStatementImport struct {
-	source             Source
-	rawHeader          []string
-	importedRawRecords [][]string
-	transactions       []preparedTransaction
-	duplicates         []duplicateCandidate
-	conflicts          []duplicateConflict
-	summary            importSummary
+	source       Source
+	rawHeader    []string
+	transactions []preparedTransaction
+	duplicates   []duplicateCandidate
+	conflicts    []duplicateConflict
+	summary      importSummary
 }
 
 func prepareStatementImport(input io.Reader, location *time.Location) (preparedStatementImport, error) {
@@ -54,12 +52,11 @@ func prepareStatementImport(input io.Reader, location *time.Location) (preparedS
 	summary := summarizeDeduplication(imported.transactions, deduplication)
 
 	prepared := preparedStatementImport{
-		source:             imported.source,
-		rawHeader:          imported.rawHeader,
-		importedRawRecords: imported.rawRecords,
-		duplicates:         deduplication.duplicates,
-		conflicts:          deduplication.conflicts,
-		summary:            summary,
+		source:     imported.source,
+		rawHeader:  imported.rawHeader,
+		duplicates: deduplication.duplicates,
+		conflicts:  deduplication.conflicts,
+		summary:    summary,
 	}
 
 	if !summary.isConsistent() {

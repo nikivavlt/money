@@ -28,6 +28,21 @@ type StoredTransaction struct {
 	CreatedAt   time.Time
 }
 
+func canonicalTransactionDate(value time.Time) time.Time {
+	year, month, day := value.Date()
+
+	return time.Date(
+		year,
+		month,
+		day,
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
+}
+
 func validateNewTransaction(input NewTransaction) error {
 	if input.StatementID < 1 {
 		return errors.New("transaction statement ID must be positive")
@@ -57,77 +72,19 @@ func validateNewTransaction(input NewTransaction) error {
 }
 
 func (s *postgresStore) createTransaction(ctx context.Context, input NewTransaction) (StoredTransaction, error) {
-	if err := validateNewTransaction(input); err != nil {
-		return StoredTransaction{}, err
-	}
-
-	rawRecordJSON, err := json.Marshal(input.RawRecord)
-	if err != nil {
-		return StoredTransaction{}, fmt.Errorf("encode transaction raw record: %w", err)
-	}
-
-	description := strings.TrimSpace(input.Transaction.Description)
-
-	counterparty := strings.TrimSpace(input.Transaction.Counterparty)
-
-	var counterpartyArgument any
-	if counterparty != "" {
-		counterpartyArgument = counterparty
-	}
-
-	const query = `
-		INSERT INTO transactions (
-			statement_id,
-			fingerprint,
-			transaction_date,
-			amount_minor,
-			currency,
-			description,
-			counterparty,
-			raw_record
-		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
-		RETURNING id, created_at`
-
-	row := s.db.QueryRowContext(
-		ctx,
-		query,
-		input.StatementID,
-		input.Fingerprint[:],
-		input.Transaction.Date,
-		int64(input.Transaction.Amount.Amount),
-		string(input.Transaction.Amount.Currency),
-		description,
-		counterpartyArgument,
-		string(rawRecordJSON),
-	)
-
-	var created StoredTransaction
-
-	if err := row.Scan(
-		&created.ID,
-		&created.CreatedAt,
-	); err != nil {
-		return StoredTransaction{}, fmt.Errorf(
-			"create transaction: %w",
-			err,
-		)
-	}
-
-	created.StatementID = input.StatementID
-	created.Fingerprint = input.Fingerprint
-	created.Transaction = input.Transaction
-	created.Transaction.Description = description
-	created.Transaction.Counterparty = counterparty
-	created.RawRecord = slices.Clone(input.RawRecord)
-
-	return created, nil
+	return insertTransaction(ctx, s.db, input)
 }
 
-func insertTransaction(ctx context.Context, db rowQuerier, input NewTransaction) (StoredTransaction, error) {
+func insertTransaction(
+	ctx context.Context,
+	db rowQuerier,
+	input NewTransaction,
+) (StoredTransaction, error) {
 	if err := validateNewTransaction(input); err != nil {
 		return StoredTransaction{}, err
 	}
+
+	input.Transaction.Date = canonicalTransactionDate(input.Transaction.Date)
 
 	rawRecordJSON, err := json.Marshal(input.RawRecord)
 	if err != nil {
@@ -135,7 +92,6 @@ func insertTransaction(ctx context.Context, db rowQuerier, input NewTransaction)
 	}
 
 	description := strings.TrimSpace(input.Transaction.Description)
-
 	counterparty := strings.TrimSpace(input.Transaction.Counterparty)
 
 	var counterpartyArgument any
@@ -172,14 +128,8 @@ func insertTransaction(ctx context.Context, db rowQuerier, input NewTransaction)
 
 	var created StoredTransaction
 
-	if err := row.Scan(
-		&created.ID,
-		&created.CreatedAt,
-	); err != nil {
-		return StoredTransaction{}, fmt.Errorf(
-			"create transaction: %w",
-			err,
-		)
+	if err := row.Scan(&created.ID, &created.CreatedAt); err != nil {
+		return StoredTransaction{}, fmt.Errorf("create transaction: %w", err)
 	}
 
 	created.StatementID = input.StatementID

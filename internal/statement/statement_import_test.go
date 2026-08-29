@@ -7,20 +7,20 @@ import (
 	"testing"
 )
 
-func TestImportStatementRevolut(t *testing.T) {
+func TestReadImportedStatementRevolut(t *testing.T) {
 	input := strings.NewReader(
 		"Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance\n" +
 			`Card Payment,Current,2026-08-04 10:00:00,2026-08-04 10:01:00,"SHOP, VILNIUS",-12.34,0,EUR,COMPLETED,100.00` +
 			"\n",
 	)
 
-	source, got, err := importStatement(input)
+	imported, err := readImportedStatement(input)
 	if err != nil {
-		t.Fatalf("importStatement() returned an unexpected error: %v", err)
+		t.Fatalf("readImportedStatement() returned an unexpected error: %v", err)
 	}
 
-	if source != Revolut {
-		t.Errorf("importStatement() source = %q, want %q", source, Revolut)
+	if imported.source != Revolut {
+		t.Errorf("source = %q, want %q", imported.source, Revolut)
 	}
 
 	want := []importedTransaction{
@@ -38,25 +38,29 @@ func TestImportStatementRevolut(t *testing.T) {
 		},
 	}
 
-	if !slices.Equal(got, want) {
-		t.Errorf("importStatement() transactions = %+v, want %+v", got, want)
+	if !slices.Equal(imported.transactions, want) {
+		t.Errorf("transactions = %+v, want %+v", imported.transactions, want)
+	}
+
+	if len(imported.rawRecords) != 1 {
+		t.Fatalf("raw record count = %d, want 1", len(imported.rawRecords))
 	}
 }
 
-func TestImportStatementSwedbank(t *testing.T) {
+func TestReadImportedStatementSwedbank(t *testing.T) {
 	input := strings.NewReader(
 		"Account No,Date,Beneficiary,Details,Amount,Currency,D/K,Record ID,Code\n" +
 			`LT123,2026-08-05,MAXIMA,"Card purchase, Vilnius",25.50,EUR,D,record-123,CARD` +
 			"\n",
 	)
 
-	source, got, err := importStatement(input)
+	imported, err := readImportedStatement(input)
 	if err != nil {
-		t.Fatalf("importStatement() returned an unexpected error: %v", err)
+		t.Fatalf("readImportedStatement() returned an unexpected error: %v", err)
 	}
 
-	if source != Swedbank {
-		t.Errorf("importStatement() source = %q, want %q", source, Swedbank)
+	if imported.source != Swedbank {
+		t.Errorf("source = %q, want %q", imported.source, Swedbank)
 	}
 
 	want := []importedTransaction{
@@ -74,93 +78,12 @@ func TestImportStatementSwedbank(t *testing.T) {
 		},
 	}
 
-	if !slices.Equal(got, want) {
-		t.Errorf("importStatement() transactions = %+v, want %+v", got, want)
-	}
-}
-
-func TestImportStatementRejectsUnknownFormat(t *testing.T) {
-	input := strings.NewReader(
-		"Date,Description,Amount\n" +
-			"2026-08-05,Groceries,-25.50\n",
-	)
-
-	source, transactions, err := importStatement(input)
-	if err == nil {
-		t.Fatal("importStatement() error = nil, want non-nil")
+	if !slices.Equal(imported.transactions, want) {
+		t.Errorf("transactions = %+v, want %+v", imported.transactions, want)
 	}
 
-	if !errors.Is(err, ErrUnknownStatementFormat) {
-		t.Errorf(
-			"importStatement() error = %v, want it to match ErrUnknownStatementFormat",
-			err,
-		)
-	}
-
-	if source != "" {
-		t.Errorf("importStatement() source = %q, want empty source", source)
-	}
-
-	if transactions != nil {
-		t.Errorf(
-			"importStatement() transactions = %+v, want nil",
-			transactions,
-		)
-	}
-}
-
-func TestImportStatementRejectsAmbiguousFormat(t *testing.T) {
-	input := strings.NewReader(
-		"Type,Product,Started Date,Completed Date,Description," +
-			"Amount,Fee,Currency,State," +
-			"Account No,Date,Beneficiary,Details,D/K,Record ID,Code\n",
-	)
-
-	source, transactions, err := importStatement(input)
-	if err == nil {
-		t.Fatal("importStatement() error = nil, want non-nil")
-	}
-
-	if !errors.Is(err, ErrAmbiguousStatementFormat) {
-		t.Errorf(
-			"importStatement() error = %v, want it to match ErrAmbiguousStatementFormat",
-			err,
-		)
-	}
-
-	if source != "" {
-		t.Errorf("importStatement() source = %q, want empty source", source)
-	}
-
-	if transactions != nil {
-		t.Errorf(
-			"importStatement() transactions = %+v, want nil",
-			transactions,
-		)
-	}
-}
-
-func TestImportStatementDoesNotReturnPartialResults(t *testing.T) {
-	input := strings.NewReader(
-		"Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State\n" +
-			"Card Payment,Current,2026-08-04 10:00:00,2026-08-04 10:01:00,SHOP,-12.34,0,EUR,COMPLETED\n" +
-			`Card Payment,Current,2026-08-05 10:00:00,2026-08-05 10:01:00,"unterminated`,
-	)
-
-	source, transactions, err := importStatement(input)
-	if err == nil {
-		t.Fatal("importStatement() error = nil, want non-nil")
-	}
-
-	if source != "" {
-		t.Errorf("importStatement() source = %q, want empty source", source)
-	}
-
-	if transactions != nil {
-		t.Errorf(
-			"importStatement() returned partial transactions: %+v",
-			transactions,
-		)
+	if len(imported.rawRecords) != 1 {
+		t.Fatalf("raw record count = %d, want 1", len(imported.rawRecords))
 	}
 }
 
@@ -171,7 +94,7 @@ func TestReadImportedStatementPreservesRawData(t *testing.T) {
 			"\n",
 	)
 
-	got, err := readImportedStatement(input)
+	imported, err := readImportedStatement(input)
 	if err != nil {
 		t.Fatalf("readImportedStatement() returned an unexpected error: %v", err)
 	}
@@ -188,12 +111,12 @@ func TestReadImportedStatementPreservesRawData(t *testing.T) {
 		"State",
 	}
 
-	if !slices.Equal(got.rawHeader, wantHeader) {
-		t.Errorf("raw header = %q, want %q", got.rawHeader, wantHeader)
+	if !slices.Equal(imported.rawHeader, wantHeader) {
+		t.Errorf("raw header = %q, want %q", imported.rawHeader, wantHeader)
 	}
 
-	if len(got.rawRecords) != 1 {
-		t.Fatalf("raw record count = %d, want 1", len(got.rawRecords))
+	if len(imported.rawRecords) != 1 {
+		t.Fatalf("raw record count = %d, want 1", len(imported.rawRecords))
 	}
 
 	wantRecord := []string{
@@ -208,11 +131,76 @@ func TestReadImportedStatementPreservesRawData(t *testing.T) {
 		"COMPLETED",
 	}
 
-	if !slices.Equal(got.rawRecords[0], wantRecord) {
-		t.Errorf("raw record = %q, want %q", got.rawRecords[0], wantRecord)
+	if !slices.Equal(imported.rawRecords[0], wantRecord) {
+		t.Errorf("raw record = %q, want %q", imported.rawRecords[0], wantRecord)
 	}
 
-	if len(got.transactions) != len(got.rawRecords) {
-		t.Errorf("transaction count = %d, raw record count = %d", len(got.transactions), len(got.rawRecords))
+	if len(imported.transactions) != len(imported.rawRecords) {
+		t.Errorf("transaction count = %d, raw record count = %d", len(imported.transactions), len(imported.rawRecords))
 	}
+}
+
+func TestReadImportedStatementRejectsUnknownFormat(t *testing.T) {
+	input := strings.NewReader(
+		"Date,Description,Amount\n" +
+			"2026-08-05,Groceries,-25.50\n",
+	)
+
+	imported, err := readImportedStatement(input)
+	if err == nil {
+		t.Fatal("readImportedStatement() error = nil, want non-nil")
+	}
+
+	if !errors.Is(err, ErrUnknownStatementFormat) {
+		t.Errorf("readImportedStatement() error = %v, want ErrUnknownStatementFormat", err)
+	}
+
+	if !importedStatementIsZero(imported) {
+		t.Errorf("readImportedStatement() = %+v, want zero result", imported)
+	}
+}
+
+func TestReadImportedStatementRejectsAmbiguousFormat(t *testing.T) {
+	input := strings.NewReader(
+		"Type,Product,Started Date,Completed Date,Description," +
+			"Amount,Fee,Currency,State," +
+			"Account No,Date,Beneficiary,Details,D/K,Record ID,Code\n",
+	)
+
+	imported, err := readImportedStatement(input)
+	if err == nil {
+		t.Fatal("readImportedStatement() error = nil, want non-nil")
+	}
+
+	if !errors.Is(err, ErrAmbiguousStatementFormat) {
+		t.Errorf("readImportedStatement() error = %v, want ErrAmbiguousStatementFormat", err)
+	}
+
+	if !importedStatementIsZero(imported) {
+		t.Errorf("readImportedStatement() = %+v, want zero result", imported)
+	}
+}
+
+func TestReadImportedStatementDoesNotReturnPartialResults(t *testing.T) {
+	input := strings.NewReader(
+		"Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State\n" +
+			"Card Payment,Current,2026-08-04 10:00:00,2026-08-04 10:01:00,SHOP,-12.34,0,EUR,COMPLETED\n" +
+			`Card Payment,Current,2026-08-05 10:00:00,2026-08-05 10:01:00,"unterminated`,
+	)
+
+	imported, err := readImportedStatement(input)
+	if err == nil {
+		t.Fatal("readImportedStatement() error = nil, want non-nil")
+	}
+
+	if !importedStatementIsZero(imported) {
+		t.Errorf("readImportedStatement() returned partial result: %+v", imported)
+	}
+}
+
+func importedStatementIsZero(value importedStatement) bool {
+	return value.source == "" &&
+		value.rawHeader == nil &&
+		value.transactions == nil &&
+		value.rawRecords == nil
 }

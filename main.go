@@ -41,19 +41,19 @@ func run(
 	switch command {
 	case "help", "-h", "--help":
 		if len(rest) != 0 {
-			fmt.Fprintf(os.Stderr, "money: help: unexpected argument %q\n", rest[0])
+			fmt.Fprintf(stderr, "money: help: unexpected argument %q\n", rest[0])
 			return 2
 		}
 
-		printHelp(os.Stdout)
+		printHelp(stdout)
 		return 0
 	case "version":
 		if len(rest) != 0 {
-			fmt.Fprintf(os.Stderr, "money: version: unexpected argument %q\n", rest[0])
+			fmt.Fprintf(stderr, "money: version: unexpected argument %q\n", rest[0])
 			return 2
 		}
 
-		printVersion(os.Stdout)
+		printVersion(stdout)
 		return 0
 	case "import":
 		if len(rest) != 1 {
@@ -79,7 +79,6 @@ func run(
 		}
 
 		return 0
-
 	case "users":
 		if len(rest) != 0 {
 			fmt.Fprintf(stderr, "money: users: unexpected argument %q\n", rest[0])
@@ -92,10 +91,42 @@ func run(
 		}
 
 		return 0
+	case "transactions":
+		if len(rest) != 0 {
+			fmt.Fprintf(stderr, "money: transactions: unexpected argument %q\n", rest[0])
+			return 2
+		}
+
+		if err := runTransactionsCommand(ctx, stdout, getenv); err != nil {
+			fmt.Fprintf(stderr, "money: transactions: %v\n", err)
+			return 1
+		}
+
+		return 0
+	case "month":
+		if len(rest) != 1 {
+			fmt.Fprintln(stderr, "money: month: usage: money month <YYYY-MM>")
+			return 2
+		}
+
+		month, err := parseMonth(rest[0])
+		if err != nil {
+			fmt.Fprintf(stderr, "money: month: %v\n", err)
+			return 2
+		}
+
+		if err := runMonthCommand(ctx, month, stdout, getenv); err != nil {
+			fmt.Fprintf(stderr, "money: month: %v\n", err)
+			return 1
+		}
+
+		return 0
 	default:
-		fmt.Fprintf(os.Stderr, "money: unknown command %q\n", command)
+		fmt.Fprintf(stderr, "money: unknown command %q\n", command)
 		return 2
 	}
+
+	return 0
 }
 
 func printHelp(w io.Writer) {
@@ -106,6 +137,8 @@ Usage:
 
 Commands:
   import <path>           Import a bank statement
+  transactions            List imported transactions
+  month <YYYY-MM>         Show monthly cash flow
   user create <name>      Create a user
   users                   List users
   help                    Show help

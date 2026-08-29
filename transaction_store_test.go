@@ -379,11 +379,8 @@ func TestCreateTransactionRejectsInvalidInputBeforeDatabaseAccess(
 	}
 }
 
-func TestCreateTransactionInsertsTransaction(
-	t *testing.T,
-) {
-	ctx, store, createdStatement :=
-		createTestStatementForTransaction(t)
+func TestCreateTransactionInsertsTransaction(t *testing.T) {
+	ctx, store, createdStatement := createTestStatementForTransaction(t)
 
 	wantRawRecord := []string{
 		"2026-08-05",
@@ -403,20 +400,33 @@ func TestCreateTransactionInsertsTransaction(
 		),
 	)
 
+	inputDate := time.Date(
+		2026,
+		time.August,
+		5,
+		14,
+		35,
+		20,
+		123,
+		time.FixedZone("test", 3*60*60),
+	)
+
+	wantDate := time.Date(
+		2026,
+		time.August,
+		5,
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
+
 	input := NewTransaction{
 		StatementID: createdStatement.ID,
 		Fingerprint: fingerprint,
 		Transaction: finance.Transaction{
-			Date: time.Date(
-				2026,
-				time.August,
-				5,
-				0,
-				0,
-				0,
-				0,
-				time.UTC,
-			),
+			Date: inputDate,
 			Amount: finance.Money{
 				Amount:   -2_500,
 				Currency: finance.EUR,
@@ -427,12 +437,11 @@ func TestCreateTransactionInsertsTransaction(
 		RawRecord: slices.Clone(wantRawRecord),
 	}
 
+	originalDate := input.Transaction.Date
+
 	got, err := store.createTransaction(ctx, input)
 	if err != nil {
-		t.Fatalf(
-			"createTransaction() returned an unexpected error: %v",
-			err,
-		)
+		t.Fatalf("createTransaction() returned an unexpected error: %v", err)
 	}
 
 	t.Cleanup(func() {
@@ -440,91 +449,49 @@ func TestCreateTransactionInsertsTransaction(
 	})
 
 	if got.ID <= 0 {
-		t.Errorf(
-			"createTransaction() ID = %d, want positive",
-			got.ID,
-		)
+		t.Errorf("createTransaction() ID = %d, want positive", got.ID)
 	}
 
 	if got.StatementID != input.StatementID {
-		t.Errorf(
-			"createTransaction() StatementID = %d, want %d",
-			got.StatementID,
-			input.StatementID,
-		)
+		t.Errorf("createTransaction() StatementID = %d, want %d", got.StatementID, input.StatementID)
 	}
 
 	if got.Fingerprint != input.Fingerprint {
-		t.Errorf(
-			"createTransaction() Fingerprint = %x, want %x",
-			got.Fingerprint,
-			input.Fingerprint,
-		)
+		t.Errorf("createTransaction() Fingerprint = %x, want %x", got.Fingerprint, input.Fingerprint)
 	}
 
-	if !got.Transaction.Date.Equal(
-		input.Transaction.Date,
-	) {
-		t.Errorf(
-			"createTransaction() Date = %v, want %v",
-			got.Transaction.Date,
-			input.Transaction.Date,
-		)
+	if got.Transaction.Date != wantDate {
+		t.Errorf("createTransaction() Date = %v, want %v", got.Transaction.Date, wantDate)
 	}
 
-	if got.Transaction.Amount !=
-		input.Transaction.Amount {
-		t.Errorf(
-			"createTransaction() Amount = %+v, want %+v",
-			got.Transaction.Amount,
-			input.Transaction.Amount,
-		)
+	if input.Transaction.Date != originalDate {
+		t.Errorf("createTransaction() changed input date to %v, want %v", input.Transaction.Date, originalDate)
+	}
+
+	if got.Transaction.Amount != input.Transaction.Amount {
+		t.Errorf("createTransaction() Amount = %+v, want %+v", got.Transaction.Amount, input.Transaction.Amount)
 	}
 
 	if got.Transaction.Description != "Groceries" {
-		t.Errorf(
-			"createTransaction() Description = %q, want %q",
-			got.Transaction.Description,
-			"Groceries",
-		)
+		t.Errorf("createTransaction() Description = %q, want %q", got.Transaction.Description, "Groceries")
 	}
 
 	if got.Transaction.Counterparty != "MAXIMA" {
-		t.Errorf(
-			"createTransaction() Counterparty = %q, want %q",
-			got.Transaction.Counterparty,
-			"MAXIMA",
-		)
+		t.Errorf("createTransaction() Counterparty = %q, want %q", got.Transaction.Counterparty, "MAXIMA")
 	}
 
-	if !slices.Equal(
-		got.RawRecord,
-		wantRawRecord,
-	) {
-		t.Errorf(
-			"createTransaction() RawRecord = %q, want %q",
-			got.RawRecord,
-			wantRawRecord,
-		)
+	if !slices.Equal(got.RawRecord, wantRawRecord) {
+		t.Errorf("createTransaction() RawRecord = %q, want %q", got.RawRecord, wantRawRecord)
 	}
 
 	if got.CreatedAt.IsZero() {
-		t.Error(
-			"createTransaction() CreatedAt is zero",
-		)
+		t.Error("createTransaction() CreatedAt is zero")
 	}
 
 	input.RawRecord[0] = "Changed"
 
-	if !slices.Equal(
-		got.RawRecord,
-		wantRawRecord,
-	) {
-		t.Errorf(
-			"returned RawRecord changed after input mutation: got %q, want %q",
-			got.RawRecord,
-			wantRawRecord,
-		)
+	if !slices.Equal(got.RawRecord, wantRawRecord) {
+		t.Errorf("returned RawRecord changed after input mutation: got %q, want %q", got.RawRecord, wantRawRecord)
 	}
 
 	var (
@@ -568,109 +535,51 @@ func TestCreateTransactionInsertsTransaction(
 		&persistedCreatedAt,
 	)
 	if err != nil {
-		t.Fatalf(
-			"query inserted transaction: %v",
-			err,
-		)
+		t.Fatalf("query inserted transaction: %v", err)
 	}
 
 	var persistedRawRecord []string
 
-	if err := json.Unmarshal(
-		persistedRawJSON,
-		&persistedRawRecord,
-	); err != nil {
-		t.Fatalf(
-			"decode persisted transaction raw record: %v",
-			err,
-		)
+	if err := json.Unmarshal(persistedRawJSON, &persistedRawRecord); err != nil {
+		t.Fatalf("decode persisted transaction raw record: %v", err)
 	}
 
 	if persistedStatementID != input.StatementID {
-		t.Errorf(
-			"persisted statement ID = %d, want %d",
-			persistedStatementID,
-			input.StatementID,
-		)
+		t.Errorf("persisted statement ID = %d, want %d", persistedStatementID, input.StatementID)
 	}
 
-	if !bytes.Equal(
-		persistedFingerprint,
-		input.Fingerprint[:],
-	) {
-		t.Errorf(
-			"persisted fingerprint = %x, want %x",
-			persistedFingerprint,
-			input.Fingerprint,
-		)
+	if !bytes.Equal(persistedFingerprint, input.Fingerprint[:]) {
+		t.Errorf("persisted fingerprint = %x, want %x", persistedFingerprint, input.Fingerprint)
 	}
 
-	const dateLayout = "2006-01-02"
-
-	if persistedDate.Format(dateLayout) !=
-		input.Transaction.Date.Format(dateLayout) {
-		t.Errorf(
-			"persisted date = %v, want calendar date %v",
-			persistedDate,
-			input.Transaction.Date,
-		)
+	if !persistedDate.Equal(wantDate) {
+		t.Errorf("persisted date = %v, want %v", persistedDate, wantDate)
 	}
 
-	if persistedAmount !=
-		int64(input.Transaction.Amount.Amount) {
-		t.Errorf(
-			"persisted amount = %d, want %d",
-			persistedAmount,
-			input.Transaction.Amount.Amount,
-		)
+	if persistedAmount != int64(input.Transaction.Amount.Amount) {
+		t.Errorf("persisted amount = %d, want %d", persistedAmount, input.Transaction.Amount.Amount)
 	}
 
-	if persistedCurrency !=
-		string(input.Transaction.Amount.Currency) {
-		t.Errorf(
-			"persisted currency = %q, want %q",
-			persistedCurrency,
-			input.Transaction.Amount.Currency,
-		)
+	if persistedCurrency != string(input.Transaction.Amount.Currency) {
+		t.Errorf("persisted currency = %q, want %q", persistedCurrency, input.Transaction.Amount.Currency)
 	}
 
 	if persistedDescription != "Groceries" {
-		t.Errorf(
-			"persisted description = %q, want %q",
-			persistedDescription,
-			"Groceries",
-		)
+		t.Errorf("persisted description = %q, want %q", persistedDescription, "Groceries")
 	}
 
 	if !persistedCounterparty.Valid {
-		t.Error(
-			"persisted counterparty is NULL, want non-NULL",
-		)
+		t.Error("persisted counterparty is NULL, want non-NULL")
 	} else if persistedCounterparty.String != "MAXIMA" {
-		t.Errorf(
-			"persisted counterparty = %q, want %q",
-			persistedCounterparty.String,
-			"MAXIMA",
-		)
+		t.Errorf("persisted counterparty = %q, want %q", persistedCounterparty.String, "MAXIMA")
 	}
 
-	if !slices.Equal(
-		persistedRawRecord,
-		wantRawRecord,
-	) {
-		t.Errorf(
-			"persisted raw record = %q, want %q",
-			persistedRawRecord,
-			wantRawRecord,
-		)
+	if !slices.Equal(persistedRawRecord, wantRawRecord) {
+		t.Errorf("persisted raw record = %q, want %q", persistedRawRecord, wantRawRecord)
 	}
 
 	if !persistedCreatedAt.Equal(got.CreatedAt) {
-		t.Errorf(
-			"persisted CreatedAt = %v, want %v",
-			persistedCreatedAt,
-			got.CreatedAt,
-		)
+		t.Errorf("persisted CreatedAt = %v, want %v", persistedCreatedAt, got.CreatedAt)
 	}
 }
 
@@ -942,5 +851,37 @@ func TestCreateTransactionAllowsSameFingerprintForDifferentStatements(
 			"transaction count = %d, want 2",
 			transactionCount,
 		)
+	}
+}
+
+func TestCanonicalTransactionDate(t *testing.T) {
+	location := time.FixedZone("test", 3*60*60)
+
+	input := time.Date(
+		2026,
+		time.August,
+		29,
+		14,
+		35,
+		20,
+		123,
+		location,
+	)
+
+	got := canonicalTransactionDate(input)
+
+	want := time.Date(
+		2026,
+		time.August,
+		29,
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
+
+	if got != want {
+		t.Errorf("canonicalTransactionDate() = %v, want %v", got, want)
 	}
 }

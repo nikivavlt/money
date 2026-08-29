@@ -24,25 +24,22 @@ func TestPrepareStatementImportRevolut(t *testing.T) {
 
 	got, err := prepareStatementImport(input, location)
 	if err != nil {
-		t.Fatalf(
-			"prepareStatementImport() returned an unexpected error: %v",
-			err,
-		)
+		t.Fatalf("prepareStatementImport() returned an unexpected error: %v", err)
 	}
 
 	if got.source != Revolut {
-		t.Errorf(
-			"source = %q, want %q",
-			got.source,
-			Revolut,
-		)
+		t.Errorf("source = %q, want %q", got.source, Revolut)
+	}
+
+	if len(got.transactions) != 1 {
+		t.Fatalf("transaction count = %d, want 1", len(got.transactions))
 	}
 
 	wantTransactions := []Transaction{
 		{
 			Date: time.Date(
 				2026, time.August, 4,
-				10, 1, 0, 0,
+				0, 0, 0, 0,
 				location,
 			),
 			Amount: finance.Money{
@@ -59,17 +56,29 @@ func TestPrepareStatementImportRevolut(t *testing.T) {
 		t.Errorf("transactions = %+v, want %+v", gotTransactions, wantTransactions)
 	}
 
+	wantRawRecord := []string{
+		"Card Payment",
+		"Current",
+		"2026-08-04 10:00:00",
+		"2026-08-04 10:01:00",
+		"SHOP, VILNIUS",
+		"-12.34",
+		"0",
+		"EUR",
+		"COMPLETED",
+	}
+
+	if !slices.Equal(got.transactions[0].rawRecord, wantRawRecord) {
+		t.Errorf("transaction raw record = %q, want %q", got.transactions[0].rawRecord, wantRawRecord)
+	}
+
 	wantSummary := importSummary{
 		importedRows: 1,
 		uniqueRows:   1,
 	}
 
 	if got.summary != wantSummary {
-		t.Errorf(
-			"summary = %+v, want %+v",
-			got.summary,
-			wantSummary,
-		)
+		t.Errorf("summary = %+v, want %+v", got.summary, wantSummary)
 	}
 
 	if len(got.duplicates) != 0 {
@@ -94,26 +103,6 @@ func TestPrepareStatementImportRevolut(t *testing.T) {
 
 	if !slices.Equal(got.rawHeader, wantHeader) {
 		t.Errorf("raw header = %q, want %q", got.rawHeader, wantHeader)
-	}
-
-	if len(got.importedRawRecords) != 1 {
-		t.Fatalf("imported raw record count = %d, want 1", len(got.importedRawRecords))
-	}
-
-	wantRawRecord := []string{
-		"Card Payment",
-		"Current",
-		"2026-08-04 10:00:00",
-		"2026-08-04 10:01:00",
-		"SHOP, VILNIUS",
-		"-12.34",
-		"0",
-		"EUR",
-		"COMPLETED",
-	}
-
-	if !slices.Equal(got.importedRawRecords[0], wantRawRecord) {
-		t.Errorf("raw record = %q, want %q", got.importedRawRecords[0], wantRawRecord)
 	}
 }
 
@@ -286,10 +275,6 @@ func TestPrepareStatementImportSkipsDuplicateRows(t *testing.T) {
 			got.summary,
 			wantSummary,
 		)
-	}
-
-	if len(got.importedRawRecords) != 2 {
-		t.Errorf("imported raw record count = %d, want 2", len(got.importedRawRecords))
 	}
 
 	if len(got.transactions) != 1 {
@@ -495,7 +480,6 @@ func TestPrepareStatementImportRejectsNilLocation(t *testing.T) {
 func preparedImportIsZero(value preparedStatementImport) bool {
 	return value.source == "" &&
 		value.rawHeader == nil &&
-		value.importedRawRecords == nil &&
 		value.transactions == nil &&
 		value.duplicates == nil &&
 		value.conflicts == nil &&

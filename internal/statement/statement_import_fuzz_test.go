@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func FuzzImportStatement(f *testing.F) {
+func FuzzReadImportedStatement(f *testing.F) {
 	f.Add([]byte(
 		"Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State\n" +
 			"Card Payment,Current,2026-08-04 10:00:00,2026-08-04 10:01:00,SHOP,-12.34,0,EUR,COMPLETED\n",
@@ -29,48 +29,31 @@ Card Payment,Current,2026-08-04 10:00:00,2026-08-04 10:01:00,"unterminated`,
 	f.Add([]byte{})
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		source, transactions, err := importStatement(
+		imported, err := readImportedStatement(
 			bytes.NewReader(data),
 		)
 
 		if err != nil {
-			if source != "" {
-				t.Errorf(
-					"importStatement() source = %q with error %v, want empty source",
-					source,
-					err,
-				)
-			}
-
-			if transactions != nil {
-				t.Errorf(
-					"importStatement() returned transactions with error %v: %+v",
-					err,
-					transactions,
-				)
+			if !importedStatementIsZero(imported) {
+				t.Errorf("readImportedStatement() returned partial result with error %v: %+v", err, imported)
 			}
 
 			return
 		}
 
-		switch source {
+		switch imported.source {
 		case Revolut, Swedbank:
-			// Recognized source.
 		default:
-			t.Fatalf(
-				"importStatement() succeeded with invalid source %q",
-				source,
-			)
+			t.Fatalf("readImportedStatement() succeeded with invalid source %q", imported.source)
 		}
 
-		for index, transaction := range transactions {
-			if transaction.source != source {
-				t.Errorf(
-					"transaction %d source = %q, detected source = %q",
-					index+1,
-					transaction.source,
-					source,
-				)
+		if len(imported.transactions) != len(imported.rawRecords) {
+			t.Fatalf("transaction count = %d, raw record count = %d", len(imported.transactions), len(imported.rawRecords))
+		}
+
+		for index, transaction := range imported.transactions {
+			if transaction.source != imported.source {
+				t.Errorf("transaction %d source = %q, detected source = %q", index+1, transaction.source, imported.source)
 			}
 		}
 	})

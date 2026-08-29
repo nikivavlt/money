@@ -59,12 +59,3 @@ func readImportedStatement(input io.Reader) (importedStatement, error) {
 		return importedStatement{}, fmt.Errorf("import statement: detected unsupported source %q", source)
 	}
 }
-
-func importStatement(input io.Reader) (Source, []importedTransaction, error) {
-	imported, err := readImportedStatement(input)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return imported.source, imported.transactions, nil
-}

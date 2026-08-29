@@ -60,10 +60,7 @@ func normalizeRevolutDate(
 		)
 	}
 
-	completedAt := strings.TrimSpace(
-		transaction.completedAtText,
-	)
-
+	completedAt := strings.TrimSpace(transaction.completedAtText)
 	if completedAt == "" {
 		return time.Time{}, fmt.Errorf(
 			"normalize Revolut date: completed transaction has empty completed date",
@@ -83,7 +80,16 @@ func normalizeRevolutDate(
 		)
 	}
 
-	return parsed, nil
+	return time.Date(
+		parsed.Year(),
+		parsed.Month(),
+		parsed.Day(),
+		0,
+		0,
+		0,
+		0,
+		location,
+	), nil
 }
 
 func normalizeSwedbankDate(
