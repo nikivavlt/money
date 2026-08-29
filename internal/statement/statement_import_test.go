@@ -163,3 +163,56 @@ func TestImportStatementDoesNotReturnPartialResults(t *testing.T) {
 		)
 	}
 }
+
+func TestReadImportedStatementPreservesRawData(t *testing.T) {
+	input := strings.NewReader(
+		"Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State\n" +
+			`Card Payment,Current,2026-08-04 10:00:00,2026-08-04 10:01:00,"SHOP, VILNIUS",-12.34,0,EUR,COMPLETED` +
+			"\n",
+	)
+
+	got, err := readImportedStatement(input)
+	if err != nil {
+		t.Fatalf("readImportedStatement() returned an unexpected error: %v", err)
+	}
+
+	wantHeader := []string{
+		"Type",
+		"Product",
+		"Started Date",
+		"Completed Date",
+		"Description",
+		"Amount",
+		"Fee",
+		"Currency",
+		"State",
+	}
+
+	if !slices.Equal(got.rawHeader, wantHeader) {
+		t.Errorf("raw header = %q, want %q", got.rawHeader, wantHeader)
+	}
+
+	if len(got.rawRecords) != 1 {
+		t.Fatalf("raw record count = %d, want 1", len(got.rawRecords))
+	}
+
+	wantRecord := []string{
+		"Card Payment",
+		"Current",
+		"2026-08-04 10:00:00",
+		"2026-08-04 10:01:00",
+		"SHOP, VILNIUS",
+		"-12.34",
+		"0",
+		"EUR",
+		"COMPLETED",
+	}
+
+	if !slices.Equal(got.rawRecords[0], wantRecord) {
+		t.Errorf("raw record = %q, want %q", got.rawRecords[0], wantRecord)
+	}
+
+	if len(got.transactions) != len(got.rawRecords) {
+		t.Errorf("transaction count = %d, raw record count = %d", len(got.transactions), len(got.rawRecords))
+	}
+}

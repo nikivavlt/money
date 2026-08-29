@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"slices"
 )
 
 var swedbankRequiredHeaders = []string{
@@ -126,7 +127,8 @@ func readSwedbankRows(input io.Reader) ([]swedbankRow, error) {
 		return nil, fmt.Errorf("read Swedbank CSV: %w", err)
 	}
 
-	return readSwedbankRowsAfterHeader(reader, header)
+	rows, _, err := readSwedbankRowsAfterHeader(reader, header)
+	return rows, err
 }
 
 func (r swedbankRow) toImportedTransaction() importedTransaction {
@@ -185,45 +187,38 @@ func swedbankRowsToImportedTransactions(
 	return transactions
 }
 
-func readSwedbankRowsAfterHeader(
-	reader *csv.Reader,
-	header []string,
-) ([]swedbankRow, error) {
+func readSwedbankRowsAfterHeader(reader *csv.Reader, header []string) ([]swedbankRow, [][]string, error) {
 	if reader == nil {
-		return nil, fmt.Errorf("read Swedbank CSV: nil reader")
+		return nil, nil, fmt.Errorf("read Swedbank CSV: nil reader")
 	}
 
 	reader.FieldsPerRecord = -1
 
 	indexes, err := swedbankColumnIndexes(header)
 	if err != nil {
-		return nil, fmt.Errorf("read Swedbank CSV: %w", err)
+		return nil, nil, fmt.Errorf("read Swedbank CSV: %w", err)
 	}
 
-	var rows []swedbankRow
+	var (
+		rows       []swedbankRow
+		rawRecords [][]string
+	)
 
 	for recordNumber := 2; ; recordNumber++ {
 		record, err := reader.Read()
 		if err == io.EOF {
-			return rows, nil
+			return rows, rawRecords, nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf(
-				"read Swedbank CSV record %d: %w",
-				recordNumber,
-				err,
-			)
+			return nil, nil, fmt.Errorf("read Swedbank CSV record %d: %w", recordNumber, err)
 		}
 
 		row, err := swedbankRowFromRecord(record, indexes)
 		if err != nil {
-			return nil, fmt.Errorf(
-				"parse Swedbank CSV record %d: %w",
-				recordNumber,
-				err,
-			)
+			return nil, nil, fmt.Errorf("parse Swedbank CSV record %d: %w", recordNumber, err)
 		}
 
 		rows = append(rows, row)
+		rawRecords = append(rawRecords, slices.Clone(record))
 	}
 }

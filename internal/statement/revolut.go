@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"slices"
 )
 
 var revolutRequiredHeaders = []string{
@@ -95,7 +96,8 @@ func readRevolutRows(input io.Reader) ([]revolutRow, error) {
 		return nil, fmt.Errorf("read Revolut CSV: %w", err)
 	}
 
-	return readRevolutRowsAfterHeader(reader, header)
+	rows, _, err := readRevolutRowsAfterHeader(reader, header)
+	return rows, err
 }
 
 func (r revolutRow) toImportedTransaction() importedTransaction {
@@ -145,45 +147,38 @@ func revolutRowsToImportedTransactions(
 	return transactions
 }
 
-func readRevolutRowsAfterHeader(
-	reader *csv.Reader,
-	header []string,
-) ([]revolutRow, error) {
+func readRevolutRowsAfterHeader(reader *csv.Reader, header []string) ([]revolutRow, [][]string, error) {
 	if reader == nil {
-		return nil, fmt.Errorf("read Revolut CSV: nil reader")
+		return nil, nil, fmt.Errorf("read Revolut CSV: nil reader")
 	}
 
 	reader.FieldsPerRecord = -1
 
 	indexes, err := revolutColumnIndexes(header)
 	if err != nil {
-		return nil, fmt.Errorf("read Revolut CSV: %w", err)
+		return nil, nil, fmt.Errorf("read Revolut CSV: %w", err)
 	}
 
-	var rows []revolutRow
+	var (
+		rows       []revolutRow
+		rawRecords [][]string
+	)
 
 	for recordNumber := 2; ; recordNumber++ {
 		record, err := reader.Read()
 		if err == io.EOF {
-			return rows, nil
+			return rows, rawRecords, nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf(
-				"read Revolut CSV record %d: %w",
-				recordNumber,
-				err,
-			)
+			return nil, nil, fmt.Errorf("read Revolut CSV record %d: %w", recordNumber, err)
 		}
 
 		row, err := revolutRowFromRecord(record, indexes)
 		if err != nil {
-			return nil, fmt.Errorf(
-				"parse Revolut CSV record %d: %w",
-				recordNumber,
-				err,
-			)
+			return nil, nil, fmt.Errorf("parse Revolut CSV record %d: %w", recordNumber, err)
 		}
 
 		rows = append(rows, row)
+		rawRecords = append(rawRecords, slices.Clone(record))
 	}
 }

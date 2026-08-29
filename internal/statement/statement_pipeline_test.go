@@ -53,12 +53,10 @@ func TestPrepareStatementImportRevolut(t *testing.T) {
 		},
 	}
 
-	if !slices.Equal(got.transactions, wantTransactions) {
-		t.Errorf(
-			"transactions = %+v, want %+v",
-			got.transactions,
-			wantTransactions,
-		)
+	gotTransactions := normalizedPreparedTransactions(got.transactions)
+
+	if !slices.Equal(gotTransactions, wantTransactions) {
+		t.Errorf("transactions = %+v, want %+v", gotTransactions, wantTransactions)
 	}
 
 	wantSummary := importSummary{
@@ -80,6 +78,42 @@ func TestPrepareStatementImportRevolut(t *testing.T) {
 
 	if len(got.conflicts) != 0 {
 		t.Errorf("conflict count = %d, want 0", len(got.conflicts))
+	}
+
+	wantHeader := []string{
+		"Type",
+		"Product",
+		"Started Date",
+		"Completed Date",
+		"Description",
+		"Amount",
+		"Fee",
+		"Currency",
+		"State",
+	}
+
+	if !slices.Equal(got.rawHeader, wantHeader) {
+		t.Errorf("raw header = %q, want %q", got.rawHeader, wantHeader)
+	}
+
+	if len(got.importedRawRecords) != 1 {
+		t.Fatalf("imported raw record count = %d, want 1", len(got.importedRawRecords))
+	}
+
+	wantRawRecord := []string{
+		"Card Payment",
+		"Current",
+		"2026-08-04 10:00:00",
+		"2026-08-04 10:01:00",
+		"SHOP, VILNIUS",
+		"-12.34",
+		"0",
+		"EUR",
+		"COMPLETED",
+	}
+
+	if !slices.Equal(got.importedRawRecords[0], wantRawRecord) {
+		t.Errorf("raw record = %q, want %q", got.importedRawRecords[0], wantRawRecord)
 	}
 }
 
@@ -124,7 +158,13 @@ func TestPrepareStatementImportSwedbank(t *testing.T) {
 		},
 	}
 
-	if !slices.Equal(got.transactions, wantTransactions) {
+	gotTransactions := normalizedPreparedTransactions(got.transactions)
+
+	if !slices.Equal(gotTransactions, wantTransactions) {
+		t.Errorf("transactions = %+v, want %+v", gotTransactions, wantTransactions)
+	}
+
+	if !slices.Equal(gotTransactions, wantTransactions) {
 		t.Errorf(
 			"transactions = %+v, want %+v",
 			got.transactions,
@@ -143,6 +183,41 @@ func TestPrepareStatementImportSwedbank(t *testing.T) {
 			got.summary,
 			wantSummary,
 		)
+	}
+
+	preparedTransaction := got.transactions[0]
+
+	wantIdentity := importedTransactionIdentity(importedTransaction{
+		source:           Swedbank,
+		accountText:      "LT123",
+		occurredAtText:   "2026-08-05",
+		amountText:       "25.50",
+		currencyText:     "EUR",
+		directionText:    "D",
+		rawDescription:   "Card purchase, Vilnius",
+		counterpartyText: "MAXIMA",
+		externalID:       "record-123",
+		typeText:         "CARD",
+	})
+
+	if preparedTransaction.identity != wantIdentity {
+		t.Errorf("transaction identity = %x, want %x", preparedTransaction.identity.digest, wantIdentity.digest)
+	}
+
+	wantRawRecord := []string{
+		"LT123",
+		"2026-08-05",
+		"MAXIMA",
+		"Card purchase, Vilnius",
+		"25.50",
+		"EUR",
+		"D",
+		"record-123",
+		"CARD",
+	}
+
+	if !slices.Equal(preparedTransaction.rawRecord, wantRawRecord) {
+		t.Errorf("transaction raw record = %q, want %q", preparedTransaction.rawRecord, wantRawRecord)
 	}
 }
 
@@ -211,6 +286,14 @@ func TestPrepareStatementImportSkipsDuplicateRows(t *testing.T) {
 			got.summary,
 			wantSummary,
 		)
+	}
+
+	if len(got.importedRawRecords) != 2 {
+		t.Errorf("imported raw record count = %d, want 2", len(got.importedRawRecords))
+	}
+
+	if len(got.transactions) != 1 {
+		t.Errorf("normalized transaction count = %d, want 1", len(got.transactions))
 	}
 }
 
@@ -411,8 +494,24 @@ func TestPrepareStatementImportRejectsNilLocation(t *testing.T) {
 
 func preparedImportIsZero(value preparedStatementImport) bool {
 	return value.source == "" &&
+		value.rawHeader == nil &&
+		value.importedRawRecords == nil &&
 		value.transactions == nil &&
 		value.duplicates == nil &&
 		value.conflicts == nil &&
 		value.summary == (importSummary{})
+}
+
+func normalizedPreparedTransactions(input []preparedTransaction) []Transaction {
+	if input == nil {
+		return nil
+	}
+
+	result := make([]Transaction, len(input))
+
+	for index, transaction := range input {
+		result[index] = transaction.normalized
+	}
+
+	return result
 }

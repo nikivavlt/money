@@ -760,3 +760,187 @@ func TestCreateTransactionStoresEmptyCounterpartyAsNull(
 		)
 	}
 }
+
+func TestCreateTransactionAllowsSameFingerprintForDifferentStatements(
+	t *testing.T,
+) {
+	ctx, store := openTestPostgresStore(t)
+
+	user, err := store.createUser(
+		ctx,
+		"Transaction Fingerprint Scope Test User",
+	)
+	if err != nil {
+		t.Fatalf("create test user: %v", err)
+	}
+
+	t.Cleanup(func() {
+		deleteTestUser(t, store, user.ID)
+	})
+
+	firstStatement, err := store.createStatement(
+		ctx,
+		NewStatement{
+			UserID:           user.ID,
+			Source:           statement.Revolut,
+			OriginalFilename: "first-statement.csv",
+			Fingerprint: Fingerprint(sha256.Sum256(
+				[]byte(fmt.Sprintf(
+					"first statement:%d",
+					user.ID,
+				)),
+			)),
+			RawHeader: []string{"Date", "Amount"},
+		},
+	)
+	if err != nil {
+		t.Fatalf("create first statement: %v", err)
+	}
+
+	t.Cleanup(func() {
+		deleteTestStatement(t, store, firstStatement.ID)
+	})
+
+	secondStatement, err := store.createStatement(
+		ctx,
+		NewStatement{
+			UserID:           user.ID,
+			Source:           statement.Revolut,
+			OriginalFilename: "second-statement.csv",
+			Fingerprint: Fingerprint(sha256.Sum256(
+				[]byte(fmt.Sprintf(
+					"second statement:%d",
+					user.ID,
+				)),
+			)),
+			RawHeader: []string{"Date", "Amount"},
+		},
+	)
+	if err != nil {
+		t.Fatalf("create second statement: %v", err)
+	}
+
+	t.Cleanup(func() {
+		deleteTestStatement(t, store, secondStatement.ID)
+	})
+
+	sharedFingerprint := Fingerprint(sha256.Sum256(
+		[]byte(fmt.Sprintf(
+			"shared transaction:%d",
+			user.ID,
+		)),
+	))
+
+	firstInput := NewTransaction{
+		StatementID: firstStatement.ID,
+		Fingerprint: sharedFingerprint,
+		Transaction: finance.Transaction{
+			Date: time.Date(
+				2026,
+				time.August,
+				29,
+				0,
+				0,
+				0,
+				0,
+				time.UTC,
+			),
+			Amount: finance.Money{
+				Amount:   -1299,
+				Currency: finance.EUR,
+			},
+			Description:  "Test purchase",
+			Counterparty: "Test Shop",
+		},
+		RawRecord: []string{
+			"2026-08-29",
+			"Test purchase",
+			"-12.99",
+		},
+	}
+
+	firstTransaction, err := store.createTransaction(
+		ctx,
+		firstInput,
+	)
+	if err != nil {
+		t.Fatalf(
+			"create first transaction: %v",
+			err,
+		)
+	}
+
+	t.Cleanup(func() {
+		deleteTestTransaction(
+			t,
+			store,
+			firstTransaction.ID,
+		)
+	})
+
+	secondInput := firstInput
+	secondInput.StatementID = secondStatement.ID
+
+	secondTransaction, err := store.createTransaction(
+		ctx,
+		secondInput,
+	)
+	if err != nil {
+		t.Fatalf(
+			"create second transaction with shared fingerprint: %v",
+			err,
+		)
+	}
+
+	t.Cleanup(func() {
+		deleteTestTransaction(
+			t,
+			store,
+			secondTransaction.ID,
+		)
+	})
+
+	if firstTransaction.StatementID != firstStatement.ID {
+		t.Errorf(
+			"first transaction StatementID = %d, want %d",
+			firstTransaction.StatementID,
+			firstStatement.ID,
+		)
+	}
+
+	if secondTransaction.StatementID != secondStatement.ID {
+		t.Errorf(
+			"second transaction StatementID = %d, want %d",
+			secondTransaction.StatementID,
+			secondStatement.ID,
+		)
+	}
+
+	var transactionCount int
+
+	err = store.db.QueryRowContext(
+		ctx,
+		`
+			SELECT COUNT(*)
+			FROM transactions
+			WHERE fingerprint = $1
+			  AND statement_id IN ($2, $3)
+		`,
+		sharedFingerprint[:],
+		firstStatement.ID,
+		secondStatement.ID,
+	).Scan(&transactionCount)
+	if err != nil {
+		t.Fatalf(
+			"count transactions with shared fingerprint: %v",
+			err,
+		)
+	}
+
+	if transactionCount != 2 {
+		t.Errorf(
+			"transaction count = %d, want 2",
+			transactionCount,
+		)
+	}
+}

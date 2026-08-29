@@ -4,71 +4,67 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"slices"
 )
 
-func importStatement(
-	input io.Reader,
-) (
-	Source,
-	[]importedTransaction,
-	error,
-) {
+type importedStatement struct {
+	source       Source
+	rawHeader    []string
+	transactions []importedTransaction
+	rawRecords   [][]string
+}
+
+func readImportedStatement(input io.Reader) (importedStatement, error) {
 	reader := csv.NewReader(input)
 	reader.FieldsPerRecord = -1
 
 	header, err := readCSVHeaderRecord(reader)
 	if err != nil {
-		return "", nil, fmt.Errorf(
-			"import statement: %w",
-			err,
-		)
+		return importedStatement{}, fmt.Errorf("import statement: %w", err)
 	}
 
 	source, err := detectStatementSource(header)
 	if err != nil {
-		return "", nil, fmt.Errorf(
-			"import statement: %w",
-			err,
-		)
+		return importedStatement{}, fmt.Errorf("import statement: %w", err)
 	}
 
 	switch source {
 	case Revolut:
-		rows, err := readRevolutRowsAfterHeader(
-			reader,
-			header,
-		)
+		rows, rawRecords, err := readRevolutRowsAfterHeader(reader, header)
 		if err != nil {
-			return "", nil, fmt.Errorf(
-				"import statement as Revolut: %w",
-				err,
-			)
+			return importedStatement{}, fmt.Errorf("import statement as Revolut: %w", err)
 		}
 
-		return Revolut,
-			revolutRowsToImportedTransactions(rows),
-			nil
+		return importedStatement{
+			source:       Revolut,
+			rawHeader:    slices.Clone(header),
+			transactions: revolutRowsToImportedTransactions(rows),
+			rawRecords:   rawRecords,
+		}, nil
 
 	case Swedbank:
-		rows, err := readSwedbankRowsAfterHeader(
-			reader,
-			header,
-		)
+		rows, rawRecords, err := readSwedbankRowsAfterHeader(reader, header)
 		if err != nil {
-			return "", nil, fmt.Errorf(
-				"import statement as Swedbank: %w",
-				err,
-			)
+			return importedStatement{}, fmt.Errorf("import statement as Swedbank: %w", err)
 		}
 
-		return Swedbank,
-			swedbankRowsToImportedTransactions(rows),
-			nil
+		return importedStatement{
+			source:       Swedbank,
+			rawHeader:    slices.Clone(header),
+			transactions: swedbankRowsToImportedTransactions(rows),
+			rawRecords:   rawRecords,
+		}, nil
 
 	default:
-		return "", nil, fmt.Errorf(
-			"import statement: detected unsupported source %q",
-			source,
-		)
+		return importedStatement{}, fmt.Errorf("import statement: detected unsupported source %q", source)
 	}
+}
+
+func importStatement(input io.Reader) (Source, []importedTransaction, error) {
+	imported, err := readImportedStatement(input)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return imported.source, imported.transactions, nil
 }

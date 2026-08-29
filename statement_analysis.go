@@ -20,10 +20,7 @@ func analyzeStatementCashFlow(
 	location *time.Location,
 	currency finance.Currency,
 ) (statementCashFlow, error) {
-	prepared, err := statement.Prepare(
-		input,
-		location,
-	)
+	prepared, err := statement.Prepare(input, location)
 
 	result := statementCashFlow{
 		source:        prepared.Source,
@@ -31,21 +28,18 @@ func analyzeStatementCashFlow(
 	}
 
 	if err != nil {
-		return result, fmt.Errorf(
-			"analyze statement cash flow: %w",
-			err,
-		)
+		return result, fmt.Errorf("analyze statement cash flow: %w", err)
 	}
 
-	totals, err := finance.CalculateCashFlowTotals(
-		prepared.Transactions,
-		currency,
-	)
+	transactions := make([]finance.Transaction, len(prepared.Transactions))
+
+	for index, preparedTransaction := range prepared.Transactions {
+		transactions[index] = preparedTransaction.Transaction
+	}
+
+	totals, err := finance.CalculateCashFlowTotals(transactions, currency)
 	if err != nil {
-		return result, fmt.Errorf(
-			"analyze statement cash flow: %w",
-			err,
-		)
+		return result, fmt.Errorf("analyze statement cash flow: %w", err)
 	}
 
 	result.totals = totals
