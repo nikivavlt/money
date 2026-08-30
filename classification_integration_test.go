@@ -9,10 +9,10 @@ import (
 	"money/internal/statement"
 )
 
-func TestModule5RuleClassificationAndCorrectionLearning(t *testing.T) {
+func TestRuleClassificationAndCorrectionLearning(t *testing.T) {
 	ctx, store := openTestPostgresStore(t)
 
-	user, err := store.createUser(ctx, "Module Five Integration User")
+	user, err := store.createUser(ctx, "Classification Integration User")
 	if err != nil {
 		t.Fatalf("create test user: %v", err)
 	}
@@ -52,13 +52,13 @@ func TestModule5RuleClassificationAndCorrectionLearning(t *testing.T) {
 
 	firstInput := "" +
 		"Account No,Date,Beneficiary,Details,Amount,Currency,D/K,Record ID,Code\n" +
-		"LT-MODULE-5,2026-08-28,MAXIMA,Purchase,25.50,EUR,D,module-5-record-1,CARD\n"
+		"LT-CLASSIFICATION,2026-08-28,MAXIMA,Purchase,25.50,EUR,D,classification-record-1,CARD\n"
 
 	firstImport, err := importStatement(
 		ctx,
 		store,
 		user.ID,
-		"module-5-first.csv",
+		"classification-first.csv",
 		strings.NewReader(firstInput),
 		time.UTC,
 	)
@@ -120,13 +120,13 @@ func TestModule5RuleClassificationAndCorrectionLearning(t *testing.T) {
 
 	secondInput := "" +
 		"Account No,Date,Beneficiary,Details,Amount,Currency,D/K,Record ID,Code\n" +
-		"LT-MODULE-5,2026-08-29,MAXIMA,Another purchase,31.00,EUR,D,module-5-record-2,CARD\n"
+		"LT-CLASSIFICATION,2026-08-29,MAXIMA,Another purchase,31.00,EUR,D,classification-record-2,CARD\n"
 
 	secondImport, err := importStatement(
 		ctx,
 		store,
 		user.ID,
-		"module-5-second.csv",
+		"classification-second.csv",
 		strings.NewReader(secondInput),
 		time.UTC,
 	)
