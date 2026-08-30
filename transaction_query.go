@@ -17,6 +17,9 @@ type listedTransaction struct {
 	Source           statement.Source
 	OriginalFilename string
 	Transaction      finance.Transaction
+	MerchantName     string
+	CategoryName     string
+	Classification   string
 	CreatedAt        time.Time
 }
 
@@ -39,10 +42,17 @@ func (s *postgresStore) listTransactionsByUser(
 			t.currency,
 			t.description,
 			t.counterparty,
+			m.name,
+			c.name,
+			t.categorization_source,
 			t.created_at
 		FROM transactions AS t
 		JOIN statements AS s
 			ON s.id = t.statement_id
+		LEFT JOIN merchants AS m
+			ON m.id = t.merchant_id
+		LEFT JOIN categories AS c
+			ON c.id = t.category_id
 		WHERE s.user_id = $1
 		ORDER BY
 			t.transaction_date DESC,
@@ -59,11 +69,14 @@ func (s *postgresStore) listTransactionsByUser(
 
 	for rows.Next() {
 		var (
-			transaction  listedTransaction
-			source       string
-			amountMinor  int64
-			currency     string
-			counterparty sql.NullString
+			transaction    listedTransaction
+			source         string
+			amountMinor    int64
+			currency       string
+			counterparty   sql.NullString
+			merchant       sql.NullString
+			category       sql.NullString
+			classification sql.NullString
 		)
 
 		err := rows.Scan(
@@ -76,6 +89,9 @@ func (s *postgresStore) listTransactionsByUser(
 			&currency,
 			&transaction.Transaction.Description,
 			&counterparty,
+			&merchant,
+			&category,
+			&classification,
 			&transaction.CreatedAt,
 		)
 		if err != nil {
@@ -101,6 +117,15 @@ func (s *postgresStore) listTransactionsByUser(
 
 		if counterparty.Valid {
 			transaction.Transaction.Counterparty = counterparty.String
+		}
+		if merchant.Valid {
+			transaction.MerchantName = merchant.String
+		}
+		if category.Valid {
+			transaction.CategoryName = category.String
+		}
+		if classification.Valid {
+			transaction.Classification = classification.String
 		}
 
 		transactions = append(transactions, transaction)

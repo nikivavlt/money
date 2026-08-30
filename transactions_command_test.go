@@ -27,6 +27,9 @@ func TestWriteTransactions(t *testing.T) {
 				Description:  "Groceries",
 				Counterparty: "MAXIMA",
 			},
+			MerchantName:   "Maxima",
+			CategoryName:   "Groceries",
+			Classification: "rule",
 		},
 		{
 			ID:               10,
@@ -50,9 +53,9 @@ func TestWriteTransactions(t *testing.T) {
 	}
 
 	want := "" +
-		"ID\tDATE\tAMOUNT\tDESCRIPTION\tCOUNTERPARTY\tSOURCE\tSTATEMENT\tFILE\n" +
-		"11\t2026-08-29\t-25.50 EUR\t\"Groceries\"\t\"MAXIMA\"\tswedbank\t5\t\"statement.csv\"\n" +
-		"10\t2026-08-28\t1000.00 EUR\t\"Salary\"\t\"\"\tswedbank\t5\t\"statement.csv\"\n"
+		"ID\tDATE\tAMOUNT\tDESCRIPTION\tCOUNTERPARTY\tMERCHANT\tCATEGORY\tCLASSIFIED_BY\tSOURCE\tSTATEMENT\tFILE\n" +
+		"11\t2026-08-29\t-25.50 EUR\t\"Groceries\"\t\"MAXIMA\"\t\"Maxima\"\t\"Groceries\"\trule\tswedbank\t5\t\"statement.csv\"\n" +
+		"10\t2026-08-28\t1000.00 EUR\t\"Salary\"\t\"\"\t\"\"\t\"\"\t\tswedbank\t5\t\"statement.csv\"\n"
 
 	if output.String() != want {
 		t.Errorf("writeTransactions() output = %q, want %q", output.String(), want)

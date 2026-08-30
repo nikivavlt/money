@@ -175,7 +175,9 @@ func TestWriteStatementImportResult(t *testing.T) {
 		"Imported rows:       3\n" +
 		"Unique rows:         2\n" +
 		"Duplicates:          1\n" +
-		"Conflicts:           0\n"
+		"Import conflicts:     0\n" +
+		"Rule classified:      0\n" +
+		"Rule conflicts:       0\n"
 
 	if output.String() != want {
 		t.Errorf("writeStatementImportResult() output = %q, want %q", output.String(), want)

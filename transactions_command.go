@@ -48,7 +48,7 @@ func writeTransactions(
 		return nil
 	}
 
-	if _, err := fmt.Fprintln(output, "ID\tDATE\tAMOUNT\tDESCRIPTION\tCOUNTERPARTY\tSOURCE\tSTATEMENT\tFILE"); err != nil {
+	if _, err := fmt.Fprintln(output, "ID\tDATE\tAMOUNT\tDESCRIPTION\tCOUNTERPARTY\tMERCHANT\tCATEGORY\tCLASSIFIED_BY\tSOURCE\tSTATEMENT\tFILE"); err != nil {
 		return fmt.Errorf("write transactions: %w", err)
 	}
 
@@ -60,12 +60,15 @@ func writeTransactions(
 
 		_, err = fmt.Fprintf(
 			output,
-			"%d\t%s\t%s\t%q\t%q\t%s\t%d\t%q\n",
+			"%d\t%s\t%s\t%q\t%q\t%q\t%q\t%s\t%s\t%d\t%q\n",
 			transaction.ID,
 			transaction.Transaction.Date.Format("2006-01-02"),
 			amount,
 			transaction.Transaction.Description,
 			transaction.Transaction.Counterparty,
+			transaction.MerchantName,
+			transaction.CategoryName,
+			transaction.Classification,
 			transaction.Source,
 			transaction.StatementID,
 			transaction.OriginalFilename,

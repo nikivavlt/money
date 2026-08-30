@@ -121,6 +121,39 @@ func run(
 		}
 
 		return 0
+	case "categories":
+		if err := runCategoriesCommand(ctx, rest, stdout, getenv); err != nil {
+			fmt.Fprintf(stderr, "money: categories: %v\n", err)
+			return 1
+		}
+
+		return 0
+	case "merchants":
+		if len(rest) != 0 {
+			fmt.Fprintf(stderr, "money: merchants: unexpected argument %q\n", rest[0])
+			return 2
+		}
+
+		if err := runMerchantsCommand(ctx, stdout, getenv); err != nil {
+			fmt.Fprintf(stderr, "money: merchants: %v\n", err)
+			return 1
+		}
+
+		return 0
+	case "rules":
+		if err := runRulesCommand(ctx, rest, stdout, getenv); err != nil {
+			fmt.Fprintf(stderr, "money: rules: %v\n", err)
+			return 1
+		}
+
+		return 0
+	case "review":
+		if err := runReviewCommand(ctx, rest, os.Stdin, stdout, getenv); err != nil {
+			fmt.Fprintf(stderr, "money: review: %v\n", err)
+			return 1
+		}
+
+		return 0
 	default:
 		fmt.Fprintf(stderr, "money: unknown command %q\n", command)
 		return 2
@@ -137,6 +170,15 @@ Commands:
   import <path>           Import a bank statement
   transactions            List imported transactions
   month <YYYY-MM>         Show monthly cash flow
+  categories              List configured categories
+  categories add <name>   Add a custom category
+  merchants               List learned merchants
+  rules                    List merchant rules
+  rules add [flags]        Add a deterministic merchant rule
+  rules apply              Apply rules to uncategorized transactions
+  rules enable|disable ID  Change whether a rule participates
+  rules priority ID N      Change rule precedence
+  review [transaction-id]  Review expenses or correct one transaction
   user create <name>      Create a user
   users                   List users
   help                    Show help

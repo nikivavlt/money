@@ -82,13 +82,17 @@ func writeStatementImportResult(
 			"Imported rows:       %d\n"+
 			"Unique rows:         %d\n"+
 			"Duplicates:          %d\n"+
-			"Conflicts:           %d\n",
+			"Import conflicts:     %d\n"+
+			"Rule classified:      %d\n"+
+			"Rule conflicts:       %d\n",
 		result.Stored.Statement.ID,
 		len(result.Stored.Transactions),
 		result.Summary.ImportedRows,
 		result.Summary.UniqueRows,
 		result.Summary.DuplicateRows,
 		result.Summary.ConflictRows,
+		result.Stored.RuleClassified,
+		len(result.Stored.CategorizationConflicts),
 	)
 	if err != nil {
 		return fmt.Errorf("write import result: %w", err)

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"money/internal/categorization"
 	"money/internal/finance"
 )
 
@@ -20,12 +21,13 @@ type NewTransaction struct {
 }
 
 type StoredTransaction struct {
-	ID          int64
-	StatementID int64
-	Fingerprint Fingerprint
-	Transaction finance.Transaction
-	RawRecord   []string
-	CreatedAt   time.Time
+	ID                    int64
+	StatementID           int64
+	Fingerprint           Fingerprint
+	Transaction           finance.Transaction
+	NormalizedDescription string
+	RawRecord             []string
+	CreatedAt             time.Time
 }
 
 func canonicalTransactionDate(value time.Time) time.Time {
@@ -93,6 +95,7 @@ func insertTransaction(
 
 	description := strings.TrimSpace(input.Transaction.Description)
 	counterparty := strings.TrimSpace(input.Transaction.Counterparty)
+	normalizedDescription := categorization.MatchText(counterparty, description)
 
 	var counterpartyArgument any
 	if counterparty != "" {
@@ -108,9 +111,10 @@ func insertTransaction(
 			currency,
 			description,
 			counterparty,
+			normalized_description,
 			raw_record
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
 		RETURNING id, created_at`
 
 	row := db.QueryRowContext(
@@ -123,6 +127,7 @@ func insertTransaction(
 		string(input.Transaction.Amount.Currency),
 		description,
 		counterpartyArgument,
+		normalizedDescription,
 		string(rawRecordJSON),
 	)
 
@@ -137,6 +142,7 @@ func insertTransaction(
 	created.Transaction = input.Transaction
 	created.Transaction.Description = description
 	created.Transaction.Counterparty = counterparty
+	created.NormalizedDescription = normalizedDescription
 	created.RawRecord = slices.Clone(input.RawRecord)
 
 	return created, nil

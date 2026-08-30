@@ -20,17 +20,31 @@ func (s *postgresStore) createUser(ctx context.Context, name string) (User, erro
 		return User{}, errors.New("user name is empty")
 	}
 
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return User{}, fmt.Errorf("begin create user: %w", err)
+	}
+	defer tx.Rollback()
+
 	const query = `
 		INSERT INTO users (name)
 		VALUES ($1)
 		RETURNING id, name, created_at`
 
-	row := s.db.QueryRowContext(ctx, query, normalized)
+	row := tx.QueryRowContext(ctx, query, normalized)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Name, &user.CreatedAt)
+	err = row.Scan(&user.ID, &user.Name, &user.CreatedAt)
 	if err != nil {
 		return User{}, fmt.Errorf("create user: %w", err)
+	}
+
+	if err := seedDefaultCategories(ctx, tx, user.ID); err != nil {
+		return User{}, fmt.Errorf("create user categories: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return User{}, fmt.Errorf("commit create user: %w", err)
 	}
 
 	return user, nil

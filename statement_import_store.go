@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"money/internal/finance"
 )
 
@@ -18,8 +19,10 @@ type NewStatementImport struct {
 }
 
 type StoredStatementImport struct {
-	Statement    Statement
-	Transactions []StoredTransaction
+	Statement               Statement
+	Transactions            []StoredTransaction
+	RuleClassified          int
+	CategorizationConflicts []RuleConflict
 }
 
 func (s *postgresStore) createStatementImport(ctx context.Context, input NewStatementImport) (StoredStatementImport, error) {
@@ -34,7 +37,17 @@ func (s *postgresStore) createStatementImport(ctx context.Context, input NewStat
 		return StoredStatementImport{}, fmt.Errorf("import statement: %w", err)
 	}
 
+	storedRules, err := queryMerchantRules(ctx, tx, input.Statement.UserID, true)
+	if err != nil {
+		return StoredStatementImport{}, fmt.Errorf("load import merchant rules: %w", err)
+	}
+	rules := categorizationRules(storedRules)
+
 	createdTransactions := make([]StoredTransaction, 0, len(input.Transactions))
+	var (
+		ruleClassified          int
+		categorizationConflicts []RuleConflict
+	)
 
 	for index, transaction := range input.Transactions {
 		created, err := insertTransaction(
@@ -52,6 +65,23 @@ func (s *postgresStore) createStatementImport(ctx context.Context, input NewStat
 		}
 
 		createdTransactions = append(createdTransactions, created)
+
+		classified, conflict, err := classifyStoredTransaction(
+			ctx,
+			tx,
+			input.Statement.Source,
+			created,
+			rules,
+		)
+		if err != nil {
+			return StoredStatementImport{}, fmt.Errorf("categorize transaction %d: %w", index+1, err)
+		}
+		if classified {
+			ruleClassified++
+		}
+		if conflict.TransactionID != 0 {
+			categorizationConflicts = append(categorizationConflicts, conflict)
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -59,7 +89,9 @@ func (s *postgresStore) createStatementImport(ctx context.Context, input NewStat
 	}
 
 	return StoredStatementImport{
-		Statement:    createdStatement,
-		Transactions: createdTransactions,
+		Statement:               createdStatement,
+		Transactions:            createdTransactions,
+		RuleClassified:          ruleClassified,
+		CategorizationConflicts: categorizationConflicts,
 	}, nil
 }
